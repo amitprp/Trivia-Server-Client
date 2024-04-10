@@ -61,22 +61,33 @@ class LookingForServerState(ClientState):
 
 class ConnectingToServerState(ClientState):
 
-    def __init__(self, server_IP, server_PORT, server_NAME):
+    def __init__(self, server_IP, server_PORT, server_NAME, player_name):
         super().__init__(self)
         self.server_IP = server_IP
         self.server_PORT = server_PORT
         self.server_NAME = server_NAME
+        self.player_name = player_name
 
     def handle(self):
-        # server_name, server_port = self.parse_offer_packet()
-        # server_IP = self.addr
-        # server_PORT = None
-        # server_NAME = None
         while True:
-            print(f"Received offer from server “{self.server_NAME}” at address {self.server_IP}, attempting to "
-                  f"connect...")
+            # Create a TCP socket
+            client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    # Function to parse the offer packet
+            # Connect to the server
+            client_socket.connect((self.server_IP, self.server_PORT))
+
+            # Now you can send and receive data using the client_socket
+            # For example, you can send data to the server
+            data = f"{self.player_name}\n"
+            data_encoded = data.encode('utf-8')
+            client_socket.send(data_encoded)
+
+            # Receive data from the server
+            data = client_socket.recv(1024)  # Receive up to 1024 bytes of data
+            print("Received from server:", data.decode())
+
+            # Close the connection
+            client_socket.close()
 
 
     # Example usage:

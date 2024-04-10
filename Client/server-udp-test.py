@@ -19,7 +19,7 @@ def run():
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
     # Broadcast message
-    MESSAGE = construct_offer_packet("Amit", 1232)
+    MESSAGE = construct_offer_packet("MyServer", 1232)
 
     print("Broadcasting UDP message...")
     while True:

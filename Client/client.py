@@ -1,8 +1,9 @@
 from Client.client_state import *
 
 class TriviaClient:
-    def __init__(self):
+    def __init__(self, player_name):
         self.state = LookingForServerState(self)
+        self.player_name = player_name
         self.server_NAME = None
         self.server_IP = None
         self.server_PORT = None
@@ -27,11 +28,11 @@ class TriviaClient:
     def next_state(self):
         state_type = type(self.state)
         if state_type is LookingForServerState:
-            self.state = ConnectingToServerState(self.server_IP, self.server_PORT, self.server_NAME)
+            self.state = ConnectingToServerState(self.server_IP, self.server_PORT, self.server_NAME, self.player_name)
         elif state_type is ConnectingToServerState:
             self.state = GameModeState(self)
 
 
 if __name__ == "__main__":
-    client = TriviaClient()
+    client = TriviaClient("Amit")
     client.run()
