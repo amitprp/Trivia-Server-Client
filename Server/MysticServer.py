@@ -201,6 +201,15 @@ def send_message(client_socket, message):
     print(message)
 
 
+def get_bool_ans(str_player_ans):
+    lower_ans = str_player_ans.lower()
+    if lower_ans in POSSIBLE_TRUE_ANSWERS:
+        return True
+    elif lower_ans in POSSIBLE_FALSE_ANSWERS:
+        return False
+    return None
+
+
 class Server:
 
 
@@ -288,7 +297,7 @@ class Server:
 
             player_ans = client_socket.recv(BUFFER_SIZE)
             str_player_ans = player_ans.decode('utf-8')
-            answer = self.get_bool_ans(str_player_ans)
+            answer = get_bool_ans(str_player_ans)
 
             if check_answer(answer, correct_ans):
                 player = (player_name, client_socket)
@@ -350,14 +359,6 @@ class Server:
             self.send_all(NO_GOOD_ANSWERS)
         self.disconnect_all()
 
-    @staticmethod
-    def get_bool_ans(str_player_ans):
-        lower_ans = str_player_ans.lower()
-        if lower_ans in POSSIBLE_TRUE_ANSWERS:
-            return True
-        elif lower_ans in POSSIBLE_FALSE_ANSWERS:
-            return False
-        return None
 
     def announce_winner(self):
         message = f'GAME OVER!\nCongratulations to the winner: {BOLD} {self.have_winner[0][0]}! {RESET}'
