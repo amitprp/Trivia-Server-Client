@@ -37,6 +37,7 @@ class LookingForServerState(ClientState):
         try:
             data, addr = sock.recvfrom(1024)  # Buffer size is 1024 bytes
             server_NAME, server_PORT = self.parse_offer_packet(data)
+            print(server_NAME, server_PORT)
             return True, server_NAME, addr, server_PORT
         except socket.error as e:
             print(f"Socket error occurred: {e}")
