@@ -51,20 +51,6 @@ MAGIC_COOKIE = 0xabcddcba
 MESSAGE_TYPE = 0x2
 TIME_OUT_IN_SEC = 10
 
-# interface wifi names
-WIFI_INTERFACE_NAMES = [
-    # Linux
-    "wlan0", "wlan1", "wlan2",
-    # Newer Predictable Network Interface Names
-    "wlpXsY",
-    # macOS
-    "Wi-Fi",
-    # Windows
-    "Wi-Fi", "Wireless Network Connection", "WLAN",
-    # BSD
-    "wlan0", "wlan1", "wlan2"
-]
-
 # possible answers
 POSSIBLE_TRUE_ANSWERS = ['y', 't', '1']
 POSSIBLE_FALSE_ANSWERS = ['0', 'n', 'f']
