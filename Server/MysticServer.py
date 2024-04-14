@@ -143,16 +143,20 @@ ALL_QUESTIONS = nba_questions + surfing_questions
 
 
 def get_wireless_ip_address():
+
     interfaces = psutil.net_if_addrs()
+    statuses = psutil.net_if_stats()
+
     for interface_name, interface_addresses in interfaces.items():
-        cleaned_name = interface_name.replace("\u200F\u200F", "")
-        for interface in WIFI_INTERFACE_NAMES:
-            if cleaned_name.startswith(interface):
-                for address in interface_addresses:
-                    if address.family == socket.AF_INET:
-                        ip_address = address.address
-                        subnet_mask = address.netmask
-                        return ip_address, subnet_mask
+        # cleaned_name = interface_name.replace("\u200F\u200F", "")
+        # for interface in WIFI_INTERFACE_NAMES:
+        # if cleaned_name.startswith(interface):
+        for address in interface_addresses:
+            print(address, interface_name)
+            if address.family == socket.AF_INET and statuses[interface_name].isup:
+                ip_address = address.address
+                subnet_mask = address.netmask
+                return ip_address, subnet_mask
     print("Cannot get wireless IP address")
     return None, None
 
@@ -170,8 +174,9 @@ def calculate_broadcast_ip(ip_address, subnet_mask):
 
 # ip and subnet-mask for the current computer
 SERVER_IP, SUBNET_MASK = get_wireless_ip_address()
+print(SERVER_IP, SUBNET_MASK)
 if not SERVER_IP or not SUBNET_MASK:
-    print('There is no available wifi network, try again later')
+    print('There is no available network, try again later')
     exit(0)
 
 
