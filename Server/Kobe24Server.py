@@ -220,19 +220,30 @@ class Server:
 
 
     def __init__(self, name):
+
         self.name = name
+
         self.UDP_socket = create_udp_socket()
         self.TCP_socket = create_tcp_socket()
+
         self.clients = []
+        self.clients_lock = threading.Lock()
+
         self.timer = 0
         self.timer_lock = threading.Lock()
-        self.clients_lock = threading.Lock()
-        self.answers = []
-        self.answers_lock = threading.Lock()
-        self.have_winner_lock = threading.Lock()
+
         self.have_winner = []
+        self.have_winner_lock = threading.Lock()
+
         self.history = ServerHistory()
+
         self.manage_game()
+
+
+    def initiate_game_ds(self):
+        self.have_winner = []
+        self.timer = 0
+        self.clients = []
 
     def send_offer_broadcast(self, message, broadcast):
 
@@ -356,7 +367,7 @@ class Server:
 
 
     def manage_game(self):
-
+        self.initiate_game_ds()
         print(f"Server started, listening on IP address {SERVER_IP}")
         offer_message = self.construct_offer_packet()
         broadcast_ip = calc_broadcast_ip()
@@ -441,6 +452,7 @@ class Server:
                                    f'Wrong answers: {q_answered-get_it_right} \nRight answers percentage: {right_pre} \ndidn\'t answer: {q_asked-q_answered} \n'
 
         self.send_all(cur_players_message)
+
 
 
 
