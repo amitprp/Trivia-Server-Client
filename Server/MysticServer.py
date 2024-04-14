@@ -28,8 +28,15 @@ YELLOW_TEXT = "\033[93m"
 WHITE_TEXT = "\033[97m"
 BLACK_TEXT = "\033[30m"
 
+# history data
+GOT_IT_RIGHT = 'right answers'
+Q_ANSWERED = 'question answered'
+Q_ASKED = 'question asked'
+GAME_PLAYED = 'games played'
+WINS = 'wins'
+STATISTICS_DICT = {Q_ASKED: 0, GOT_IT_RIGHT: 0, Q_ANSWERED: 0, GAME_PLAYED: 0, WINS: 0}
 
-
+# default messages
 RIGHT_ANSWER = 'You showed great knowledge you must be a pro!'
 WRONG_ANSWER = 'Wrong answer maybe next time.'
 INVALID_ANSWER = 'Answer have to be one of the following: y, t, 1 for True or n, f, 0 for False'
@@ -37,13 +44,17 @@ NO_ANSWER = 'Ohh you missed it, You have to answer faster!'
 NO_GOOD_ANSWERS = 'You can do better. 0/20 really!?'
 END_OF_GAME = 'Thank you for playing, hope to see you soon! :)'
 WELCOME_MESSAGE = 'Welcome to our NBA and Surfing quiz.\nYou better be right if you want to win!'
+
+# constants
 BUFFER_SIZE = 1024
 MAGIC_COOKIE = 0xabcddcba
 MESSAGE_TYPE = 0x2
 TIME_OUT_IN_SEC = 10
+
+# interface wifi names
 WIFI_INTERFACE_NAMES = [
     # Linux
-    "wlan0", "wlan1", "wlan2",  # Traditional naming convention
+    "wlan0", "wlan1", "wlan2",
     # Newer Predictable Network Interface Names
     "wlpXsY",
     # macOS
@@ -53,6 +64,8 @@ WIFI_INTERFACE_NAMES = [
     # BSD
     "wlan0", "wlan1", "wlan2"
 ]
+
+# possible answers
 POSSIBLE_TRUE_ANSWERS = ['y', 't', '1']
 POSSIBLE_FALSE_ANSWERS = ['0', 'n', 'f']
 
@@ -85,6 +98,7 @@ def find_available_port(tcp_or_udp):
     return None
 
 
+# ports for thw whole session
 UDP_PORT = find_available_port(False)
 TCP_PORT = find_available_port(True)
 
@@ -123,6 +137,7 @@ def format_surfing_questions():
         q['question'] = CYAN_BACKGROUND + '~~~' + q['question'] + '~~~' + RESET
 
 
+# all question formatted
 format_surfing_questions()
 ALL_QUESTIONS = nba_questions + surfing_questions
 
@@ -153,11 +168,11 @@ def calculate_broadcast_ip(ip_address, subnet_mask):
         return None
 
 
+# ip and subnet-mask for the current computer
 SERVER_IP, SUBNET_MASK = get_wireless_ip_address()
 if not SERVER_IP or not SUBNET_MASK:
     print('There is no available wifi network, try again later')
     exit(0)
-
 
 
 def create_tcp_socket():
@@ -225,6 +240,8 @@ class Server:
         self.answers_lock = threading.Lock()
         self.have_winner_lock = threading.Lock()
         self.have_winner = []
+        self.history = ServerHistory()
+        self.manage_game()
 
     def send_offer_broadcast(self, message, broadcast):
 
@@ -242,6 +259,7 @@ class Server:
         player_name = client_sock.recv(1024).decode('utf-8').strip()
         print(f"Received player name: {player_name}")
         player_tup = (client_sock, client_add, player_name)
+        self.history.add_to_history(player_name, GAME_PLAYED, 1)
         add_to_locked_list(player_tup, self.clients_lock, self.clients)
 
     def accept_clients(self):
@@ -302,11 +320,14 @@ class Server:
             if check_answer(answer, correct_ans):
                 player = (player_name, client_socket)
                 add_to_locked_list(player, self.have_winner_lock, self.have_winner)
+                self.history.add_to_history(player_name, Q_ANSWERED, 1)
+                self.history.add_to_history(player_name, RIGHT_ANSWER, 1)
                 send_message(client_socket, RIGHT_ANSWER)
             elif answer is None:
                 send_message(client_socket, INVALID_ANSWER)
             else:
                 send_message(client_socket, WRONG_ANSWER)
+                self.history.add_to_history(player_name, Q_ANSWERED, 1)
 
         except socket.timeout:
             print("Timeout reached. No more clients will be accepted.")
@@ -331,6 +352,7 @@ class Server:
                 try:
                     ans_thread = threading.Thread(target=self.get_answer, args=(client_socket, player_name, correct_ans))
                     ans_thread.start()
+                    self.history.add_to_history(player_name, Q_ASKED, 1)
                     threads.append(ans_thread)
                     print("Message sent to client at:", client_address)
                 except Exception as e:
@@ -357,11 +379,15 @@ class Server:
             self.announce_winner()
         else:
             self.send_all(NO_GOOD_ANSWERS)
+        self.show_statistics()
         self.disconnect_all()
+        self.manage_game()
 
 
     def announce_winner(self):
-        message = f'GAME OVER!\nCongratulations to the winner: {BOLD} {self.have_winner[0][0]}! {RESET}'
+        winner = self.have_winner[0][0]
+        self.history.add_to_history(winner, WINS, 1)
+        message = f'GAME OVER!\nCongratulations to the winner: {BOLD} {winner}! {RESET}'
         self.send_all(message)
 
 
@@ -375,7 +401,7 @@ class Server:
         for client_socket, _, _ in self.clients:
             client_socket.close()
         print('Game over, sending out offer requests...')
-        self.manage_game()
+
 
     def send_welcome_message(self):
         message = WELCOME_MESSAGE
@@ -386,6 +412,113 @@ class Server:
         self.send_all(message)
 
 
+    def show_statistics(self):
+        self.show_top_5()
+        self.show_players_wins_stat()
+        self.show_players_right_answer_stat()
+
+
+    def show_top_5(self):
+        top_5_message = 'Top 5 all time players: \n'
+        top_5 = self.history.get_top_5()
+        for name, wins in top_5:
+            top_5_message += f'{name}: {wins} \n'
+
+        self.send_all(top_5_message)
+
+    def show_players_wins_stat(self):
+        cur_players_message = 'Current players wins stats: \n'
+        players_names = [t[0] for t in self.clients]
+        current_player_h = self.history.get_current_players_wins_history(players_names)
+        for name, games_played, wins, in current_player_h:
+            win_pre = 0
+            if games_played > 0:
+                win_pre = wins/games_played
+            cur_players_message += f'{name} - \nGames played: : {games_played} \nWins: {wins} \n Wins percentage: {win_pre}\n'
+
+        self.send_all(cur_players_message)
+
+    def show_players_right_answer_stat(self):
+        cur_players_message = 'Current players answer stats: \n'
+        players_names = [t[0] for t in self.clients]
+        current_player_h = self.history.get_current_players_answer_history(players_names)
+        for name, q_asked, q_answered, get_it_right in current_player_h:
+            right_pre = 0
+            if q_asked > 0:
+                right_pre = get_it_right / q_asked
+            cur_players_message += f'{name} - \nQuestion asked: : {q_asked} \nQuestion answered: {q_answered} \nRight answers: {get_it_right} \n' \
+                                   f'Wrong answers: {q_answered-get_it_right} \nRight answers percentage: {right_pre} \ndidn\'t answer: {q_asked-q_answered} \n'
+
+        self.send_all(cur_players_message)
+
+
+
+class ServerHistory:
+
+
+    def __init__(self):
+        self.history = dict()  # dict of {player_name: info_dict} --> info_dict = {info_name (for ex: games played): num)
+        self.history_lock = threading.Lock()
+        self.top_5 = []
+
+
+    def add_to_history(self, player_name, param, num_to_add):
+
+        if param not in STATISTICS_DICT.keys():
+            print('Invalid parameter! ')
+            return None
+        self.history_lock.acquire()
+        try:
+            if player_name not in self.history.keys():
+                self.history[player_name] = STATISTICS_DICT
+
+            self.history[player_name][param] += num_to_add
+
+        finally:
+            self.history_lock.release()
+        if param == WINS:
+            self.check_top_5(player_name, self.history[player_name][WINS])
+
+    def check_top_5(self, player_name, player_wins):
+
+        size = len(self.top_5)
+
+        if size == 0:
+            self.top_5.append((player_name, player_wins))
+
+        elif player_wins <= self.top_5[-1][1]:
+            return None
+
+        else:
+            for i in range(size):
+                if self.top_5[i][1] < player_wins:
+                    self.top_5.insert(i, (player_name, player_wins))
+                    break
+            if size >= 5:
+                self.top_5.pop()
+
+    def get_top_5(self):
+        return self.top_5
+
+    def get_current_players_wins_history(self, players_names):
+        players_his = []
+        for name in players_names:
+            if name in self.history.keys():
+                game_played = self.history[name][GAME_PLAYED]
+                wins = self.history[name][WINS]
+                players_his.append((name, game_played, wins))
+        return players_his
+
+    def get_current_players_answer_history(self, players_names):
+        players_his = []
+        for name in players_names:
+            if name in self.history.keys():
+                q_asked = self.history[name][Q_ASKED]
+                q_answered = self.history[name][Q_ANSWERED]
+                got_it_right = self.history[name][GOT_IT_RIGHT]
+                players_his.append((name, q_asked, q_answered, got_it_right))
+        return players_his
+
+
 if __name__ == "__main__":
     s = Server("kibitz")
-    s.manage_game()
