@@ -78,23 +78,27 @@ class ConnectingToServerState(ClientState):
             client_socket.connect((self.server_IP, self.server_PORT))
 
             # Now you can send and receive data using the client_socket
-            # For example, you can send data to the server
-            data = f"{self.player_name}\n"
-            data_encoded = data.encode('utf-8')
-            client_socket.send(data_encoded)
-
-            # Receive data from the server
-            data = client_socket.recv(1024)  # Receive up to 1024 bytes of data
-            print("Received from server:", data.decode())
-
-            # Close the connection
-            client_socket.close()
-
+            data = f"{self.player_name}\n".encode('utf-8')
+            try:
+                client_socket.send(data)
+            except OSError:
+                return False, None
+            return True, client_socket
 
     # Example usage:
 
 
 class GameModeState(ClientState):
+    def __init__(self, server_CONNECTION):
+        super().__init__(self)
+        self.socket = server_CONNECTION
+
     def handle(self):
         # Code to handle game mode state
-        pass
+        try:
+            # Receive data from the server
+            data = self.socket.recv(1024)  # Receive up to 1024 bytes of data
+            print(data.decode())
+        except OSError:
+            return False
+
