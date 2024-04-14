@@ -7,7 +7,7 @@ class TriviaClient:
         self.server_NAME = None
         self.server_IP = None
         self.server_PORT = None
-        self.offer = None
+        self.server_CONNECTION = None
 
     def run(self):
         connected = False
@@ -19,9 +19,16 @@ class TriviaClient:
                 self.server_PORT = server_PORT
             else:
                 print("Error occurred in connection.")
-
+            # connect through TCP
             self.next_state()
-            self.state.handle()
+            connected, self.server_CONNECTION = self.state.handle()
+            if not connected:
+                print("Server disconnected, listening for offer requests...")
+                self.to_listen_state()
+                continue
+            # pass to game mode
+            self.next_state()
+
 
 
 
@@ -30,7 +37,10 @@ class TriviaClient:
         if state_type is LookingForServerState:
             self.state = ConnectingToServerState(self.server_IP, self.server_PORT, self.server_NAME, self.player_name)
         elif state_type is ConnectingToServerState:
-            self.state = GameModeState(self)
+            self.state = GameModeState(self, self.server_CONNECTION)
+
+    def to_listen_state(self):
+        self.state = LookingForServerState(self)
 
 
 if __name__ == "__main__":
