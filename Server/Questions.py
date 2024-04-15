@@ -2,7 +2,6 @@ import ANSI
 import ReadJson
 
 json_handle = ReadJson.JsonHandle()
-ansi_dict = json_handle.read_json('Jsons/ANSI.json')
 RESET = ANSI.RESET
 
 # List of trivia questions about NBA

@@ -8,6 +8,7 @@ import Questions
 import Network
 import GameHistory
 import ANSI
+import Statistics
 
 json_handle = ReadJson.JsonHandle()
 CONSTANTS = json_handle.read_json('Jsons/constants.json')
@@ -36,8 +37,7 @@ def check_answer(answer, correct_answer):
     return answer == correct_answer
 
 
-
-class Server:
+class GameServer:
 
 
     def __init__(self, name):
@@ -56,6 +56,7 @@ class Server:
         self.have_winner_lock = threading.Lock()
 
         self.history_manager = GameHistory.GameHistory()
+        self.statistics_creator = Statistics.StatisticsCreator(self.history_manager)
 
         self.manage_game()
 
@@ -187,7 +188,6 @@ class Server:
             index += 1
 
 
-
     def manage_game(self):
         self.initiate_game_ds()
         print(f"Server started, listening on IP address {self.network_manager.get_ip_address()}")
@@ -204,6 +204,7 @@ class Server:
         else:
             self.send_all(MESSAGES['NO_GOOD_ANSWERS'])
         self.show_statistics()
+
         self.disconnect_all()
         self.manage_game()
 
@@ -235,50 +236,12 @@ class Server:
         message += '\n==\n'
         self.send_all(message)
 
-
     def show_statistics(self):
-        self.show_top_5()
-        self.show_players_wins_stat()
-        self.show_players_right_answer_stat()
-
-
-    def show_top_5(self):
-        top_5_message = 'Top 5 all time players: \n'
-        top_5 = self.history_manager.get_top_5()
-        for name, wins in top_5:
-            top_5_message += f'{name}: {wins} \n'
-
-        self.send_all(top_5_message)
-
-    def show_players_wins_stat(self):
-        cur_players_message = 'Current players wins stats: \n'
-        players_names = [t[0] for t in self.clients]
-        current_player_h = self.history_manager.get_current_players_wins_history(players_names)
-        for name, games_played, wins, in current_player_h:
-            win_pre = 0
-            if games_played > 0:
-                win_pre = wins/games_played
-            cur_players_message += f'{name} - \nGames played: : {games_played} \nWins: {wins} \n Wins percentage: {win_pre}\n'
-
-        self.send_all(cur_players_message)
-
-    def show_players_right_answer_stat(self):
-        cur_players_message = 'Current players answer stats: \n'
-        players_names = [t[0] for t in self.clients]
-        current_player_h = self.history_manager.get_current_players_answer_history(players_names)
-        for name, q_asked, q_answered, get_it_right in current_player_h:
-            right_pre = 0
-            if q_asked > 0:
-                right_pre = get_it_right / q_asked
-            cur_players_message += f'{name} - \nQuestion asked: : {q_asked} \nQuestion answered: {q_answered} \nRight answers: {get_it_right} \n' \
-                                   f'Wrong answers: {q_answered-get_it_right} \nRight answers percentage: {right_pre} \ndidn\'t answer: {q_asked-q_answered} \n'
-
-        self.send_all(cur_players_message)
-
-
-
+        statistics_tup = self.statistics_creator.give_statistics(self.clients)
+        for stat in statistics_tup:
+            self.send_all(stat)
 
 
 
 if __name__ == "__main__":
-    s = Server("Kobe24")
+    s = GameServer("Kobe24")

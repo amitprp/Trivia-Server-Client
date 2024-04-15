@@ -1,5 +1,9 @@
 import ReadJson
 import threading
+import copy
+
+json_handle = ReadJson.JsonHandle()
+HISTORY = json_handle.read_json(r'Jsons/history.json')
 
 
 class GameHistory:
@@ -10,17 +14,12 @@ class GameHistory:
         self.history = dict()  # dict of {player_name: info_dict} --> info_dict = {info_name (for ex: games played): num)
         self.history_lock = threading.Lock()
         self.top_5 = []
-        self.json_handle = ReadJson.JsonHandle()
-        self.json_history_dict = self.read_history_json(r'Jsons/history.json')
 
-    def print_g(self):
-        for g in self.json_history_dict.keys():
-            print(self.json_history_dict[g])
 
     def add_to_history(self, player_name, param, num_to_add):
 
-        stats_dict = self.json_history_dict['STATISTICS_DICT']
-        wins = self.json_history_dict['WINS']
+        stats_dict = HISTORY['STATISTICS_DICT']
+        wins = HISTORY['WINS']
 
         if param not in stats_dict.keys():
             print('Invalid parameter! ')
@@ -28,7 +27,7 @@ class GameHistory:
         self.history_lock.acquire()
         try:
             if player_name not in self.history.keys():
-                self.history[player_name] = stats_dict
+                self.history[player_name] = copy.deepcopy(stats_dict)
 
             self.history[player_name][param] += num_to_add
 
@@ -60,8 +59,8 @@ class GameHistory:
 
     def get_current_players_wins_history(self, players_names):
 
-        game_played = self.json_history_dict['GAME_PLAYED']
-        wins = self.json_history_dict['WINS']
+        game_played = HISTORY['GAME_PLAYED']
+        wins = HISTORY['WINS']
 
         players_his = []
         for name in players_names:
@@ -72,9 +71,9 @@ class GameHistory:
         return players_his
 
     def get_current_players_answer_history(self, players_names):
-        q_asked = self.json_history_dict['Q_ASKED']
-        q_answered = self.json_history_dict['Q_ANSWERED']
-        got_it_right = self.json_history_dict['GOT_IT_RIGHT']
+        q_asked = HISTORY['Q_ASKED']
+        q_answered = HISTORY['Q_ANSWERED']
+        got_it_right = HISTORY['GOT_IT_RIGHT']
         players_his = []
         for name in players_names:
             if name in self.history.keys():
@@ -83,12 +82,3 @@ class GameHistory:
                 got_it_right = self.history[name][got_it_right]
                 players_his.append((name, q_asked, q_answered, got_it_right))
         return players_his
-
-    def read_history_json(self, name):
-
-        return self.json_handle.read_json(name)
-
-
-
-g = GameHistory()
-g.print_g()

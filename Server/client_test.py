@@ -3,6 +3,7 @@ import socket
 SERVER_IP = '192.168.225.1'
 TCP_PORT = 49153
 
+
 def main():
     try:
         # Create a TCP socket and connect to the server
@@ -23,5 +24,7 @@ def main():
     except ConnectionRefusedError:
         print("Failed to connect to the server. Make sure the server is running.")
 
+
 if __name__ == "__main__":
+
     main()
