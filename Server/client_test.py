@@ -1,7 +1,7 @@
 import socket
 
-SERVER_IP = '192.168.1.220'
-TCP_PORT = 54574
+SERVER_IP = '192.168.225.1'
+TCP_PORT = 49153
 
 def main():
     try:

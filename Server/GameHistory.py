@@ -6,11 +6,12 @@ class GameHistory:
 
 
     def __init__(self):
+
         self.history = dict()  # dict of {player_name: info_dict} --> info_dict = {info_name (for ex: games played): num)
         self.history_lock = threading.Lock()
         self.top_5 = []
         self.json_handle = ReadJson.JsonHandle()
-        self.json_history_dict = self.read_history_json()
+        self.json_history_dict = self.read_history_json(r'Jsons/history.json')
 
     def print_g(self):
         for g in self.json_history_dict.keys():
@@ -83,9 +84,9 @@ class GameHistory:
                 players_his.append((name, q_asked, q_answered, got_it_right))
         return players_his
 
-    def read_history_json(self):
+    def read_history_json(self, name):
 
-        return self.json_handle.read_json('Jsons/history.json')
+        return self.json_handle.read_json(name)
 
 
 
