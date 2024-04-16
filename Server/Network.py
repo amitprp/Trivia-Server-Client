@@ -114,7 +114,6 @@ class Network:
         for interface_name, interface_addresses in interfaces.items():
 
             for address in interface_addresses:
-                print(address, interface_name)
                 if address.family == socket.AF_INET and statuses[interface_name].isup:
                     ip_address = address.address
                     subnet_mask = address.netmask
