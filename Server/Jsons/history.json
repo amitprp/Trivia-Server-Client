@@ -1,0 +1,14 @@
+{
+  "GOT_IT_RIGHT": "right answers",
+  "Q_ANSWERED": "question answered",
+  "Q_ASKED": "question asked",
+  "GAME_PLAYED": "games played",
+  "WINS": "wins",
+  "STATISTICS_DICT": {
+    "question asked": 0,
+    "right answers": 0,
+    "question answered": 0,
+    "games played": 0,
+    "wins": 0
+  }
+}
