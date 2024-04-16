@@ -152,18 +152,15 @@ class GameServer:
         if player_ans is None:
             str_player_ans = None
         else:
-            print(player_ans)
             str_player_ans = player_ans.decode('utf-8')
-            print(str_player_ans)
         answer = get_bool_ans(str_player_ans)
-        print(answer)
 
         if check_answer(answer, correct_ans):
             player = (player_name, client_socket)
             add_to_locked_list(player, self.have_winner_lock, self.have_winner)
             self.history_manager.add_to_history(player_name, HISTORY['Q_ANSWERED'], 1)
-            self.history_manager.add_to_history(player_name, HISTORY['RIGHT_ANSWER'], 1)
-            self.network_manager.send_message(client_socket, HISTORY['RIGHT_ANSWER'])
+            self.history_manager.add_to_history(player_name, HISTORY['GOT_IT_RIGHT'], 1)
+            self.network_manager.send_message(client_socket, MESSAGES['RIGHT_ANSWER'])
         elif answer is None:
             self.network_manager.send_message(client_socket, MESSAGES['INVALID_ANSWER'])
         else:

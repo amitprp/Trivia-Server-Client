@@ -33,8 +33,6 @@ class GameHistory:
 
         finally:
             self.history_lock.release()
-            print('now')
-            print(self.history[player_name][param])
         if param == wins:
             self.check_top_5(player_name, self.history[player_name][wins])
 
@@ -66,11 +64,9 @@ class GameHistory:
 
         players_his = []
         for name in players_names:
-            print('name:', name)
             if name in self.history.keys():
                 game_played = self.history[name][game_play]
                 wins = self.history[name][wins_str]
-                print('w:', wins, game_played)
                 players_his.append((name, game_played, wins))
         return players_his
 

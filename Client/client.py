@@ -58,5 +58,5 @@ class TriviaClient:
 
 
 if __name__ == "__main__":
-    client = TriviaClient("Amit", 2)
+    client = TriviaClient("Kobi", 1)
     client.run()

@@ -17,7 +17,7 @@ class Network:
         self.tcp_port = self.find_available_port(True)
         is_None(self.tcp_port, 'port')
 
-        self.server_ip, self.subnet_mask = self.get_wireless_ip_address()
+        self.server_ip, self.subnet_mask = '192.168.1.220', '255.255.255.0'  # self.get_wireless_ip_address()
         is_None(self.server_ip, 'network')
         is_None(self.subnet_mask, 'network')
 
@@ -55,6 +55,7 @@ class Network:
             print(f"Socket error: {e}")
             # Handle the error gracefully, possibly by retrying, logging, or exiting the program
             return None
+
 
 
     def create_udp_socket(self):
@@ -115,8 +116,10 @@ class Network:
 
             for address in interface_addresses:
                 if address.family == socket.AF_INET and statuses[interface_name].isup:
+
                     ip_address = address.address
                     subnet_mask = address.netmask
+                    print(ip_address, subnet_mask)
                     return ip_address, subnet_mask
         print("Cannot get wireless IP address")
         return None, None
