@@ -9,6 +9,7 @@ import Network
 import GameHistory
 import ANSI
 import Statistics
+import time
 
 json_handle = ReadJson.JsonHandle()
 CONSTANTS = json_handle.read_json('Jsons/constants.json')
@@ -175,6 +176,7 @@ class GameServer:
             message = f'Question {index+1}, True or False: {all_questions[index]["question"]}'
             self.send_all(message)
             correct_ans = all_questions[index]["is_true"]
+            time.sleep(0.5)
             threads = []
 
             for client_socket, client_address, player_name in self.clients:

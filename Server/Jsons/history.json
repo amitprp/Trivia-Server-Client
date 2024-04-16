@@ -5,10 +5,10 @@
   "GAME_PLAYED": "games played",
   "WINS": "wins",
   "STATISTICS_DICT": {
-    "Q_ASKED": 0,
-    "GOT_IT_RIGHT": 0,
-    "Q_ANSWERED": 0,
-    "GAME_PLAYED": 0,
-    "WINS": 0
+    "question asked": 0,
+    "right answers": 0,
+    "question answered": 0,
+    "games played": 0,
+    "wins": 0
   }
 }

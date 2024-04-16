@@ -106,10 +106,10 @@ class GameModeState(ClientState):
         while True:
             self.listen_to_server()
             self.listen_to_client()
-        listen_server_thread = threading.Thread(target=self.listen_to_server())
-        listen_server_thread.start()
-        user_input_thread = threading.Thread(target=self.listen_to_client())
-        user_input_thread.start()
+        # listen_server_thread = threading.Thread(target=self.listen_to_server())
+        # listen_server_thread.start()
+        # user_input_thread = threading.Thread(target=self.listen_to_client())
+        # user_input_thread.start()
 
 
 
