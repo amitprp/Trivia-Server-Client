@@ -1,9 +1,9 @@
 { 
- "RIGHT_ANSWER": "You showed great knowledge you must be a pro!\n",
-  "WRONG_ANSWER": "Wrong answer maybe next time.\n",
-  "INVALID_ANSWER": "Answer have to be one of the following: y, t, 1 for True or n, f, 0 for False\n",
-  "NO_ANSWER": "Ohh you missed it, You have to answer faster!\n",
-  "NO_GOOD_ANSWERS": "You can do better. 0/20 really!?\n",
-  "END_OF_GAME": "Thank you for playing, hope to see you soon! :)\n",
+ "RIGHT_ANSWER": "You showed great knowledge you must be a pro!",
+  "WRONG_ANSWER": "Wrong answer maybe next time.",
+  "INVALID_ANSWER": "Answer have to be one of the following: y, t, 1 for True or n, f, 0 for False",
+  "NO_ANSWER": "Ohh you missed it, You have to answer faster!",
+  "NO_GOOD_ANSWERS": "You can do better. 0/20 really!?",
+  "END_OF_GAME": "Thank you for playing, hope to see you soon! :)",
   "WELCOME_MESSAGE": "Welcome to our NBA and Surfing quiz.\nYou better be right if you want to win!\n"
 }

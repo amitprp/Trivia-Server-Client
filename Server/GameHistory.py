@@ -33,6 +33,8 @@ class GameHistory:
 
         finally:
             self.history_lock.release()
+            print('now')
+            print(self.history[player_name][param])
         if param == wins:
             self.check_top_5(player_name, self.history[player_name][wins])
 
@@ -59,26 +61,28 @@ class GameHistory:
 
     def get_current_players_wins_history(self, players_names):
 
-        game_played = HISTORY['GAME_PLAYED']
-        wins = HISTORY['WINS']
+        game_play = HISTORY['GAME_PLAYED']
+        wins_str = HISTORY['WINS']
 
         players_his = []
         for name in players_names:
+            print('name:', name)
             if name in self.history.keys():
-                game_played = self.history[name][game_played]
-                wins = self.history[name][wins]
+                game_played = self.history[name][game_play]
+                wins = self.history[name][wins_str]
+                print('w:', wins, game_played)
                 players_his.append((name, game_played, wins))
         return players_his
 
     def get_current_players_answer_history(self, players_names):
-        q_asked = HISTORY['Q_ASKED']
-        q_answered = HISTORY['Q_ANSWERED']
-        got_it_right = HISTORY['GOT_IT_RIGHT']
+        q_ask = HISTORY['Q_ASKED']
+        q_answer = HISTORY['Q_ANSWERED']
+        got_it_right_str = HISTORY['GOT_IT_RIGHT']
         players_his = []
         for name in players_names:
             if name in self.history.keys():
-                q_asked = self.history[name][q_asked]
-                q_answered = self.history[name][q_answered]
-                got_it_right = self.history[name][got_it_right]
+                q_asked = self.history[name][q_ask]
+                q_answered = self.history[name][q_answer]
+                got_it_right = self.history[name][got_it_right_str]
                 players_his.append((name, q_asked, q_answered, got_it_right))
         return players_his

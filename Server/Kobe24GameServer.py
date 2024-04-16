@@ -1,5 +1,4 @@
 import threading
-import time
 import random
 import socket
 import struct
@@ -26,6 +25,8 @@ def add_to_locked_list(player, my_lock, list_to_add):
 
 
 def get_bool_ans(str_player_ans):
+    if str_player_ans is None:
+        return None
     lower_ans = str_player_ans.lower()
     if lower_ans in CONSTANTS['POSSIBLE_TRUE_ANSWERS']:
         return True
@@ -71,8 +72,8 @@ class GameServer:
 
         while self.timer < CONSTANTS['TIME_OUT_IN_SEC']:
             self.network_manager.get_udp_socket().sendto(message, (broadcast, CONSTANTS['UDP_PORT']))
-            print(message)
             print("Offer broadcast")
+            print(message)
             self.add_to_timer()
             time.sleep(1)
 
@@ -141,28 +142,33 @@ class GameServer:
         client_socket.settimeout(CONSTANTS['TIME_OUT_IN_SEC'])
 
         try:
-
             player_ans = client_socket.recv(CONSTANTS['BUFFER_SIZE'])
-            str_player_ans = player_ans.decode('utf-8')
-            answer = get_bool_ans(str_player_ans)
-
-            if check_answer(answer, correct_ans):
-                player = (player_name, client_socket)
-                add_to_locked_list(player, self.have_winner_lock, self.have_winner)
-                self.history_manager.add_to_history(player_name, HISTORY['Q_ANSWERED'], 1)
-                self.history_manager.add_to_history(player_name, HISTORY['RIGHT_ANSWER'], 1)
-                self.network_manager.send_message(client_socket, HISTORY['RIGHT_ANSWER'])
-            elif answer is None:
-                self.network_manager.send_message(client_socket, MESSAGES['INVALID_ANSWER'])
-            else:
-                self.network_manager.send_message(client_socket, MESSAGES['WRONG_ANSWER'])
-                self.history_manager.add_to_history(player_name, MESSAGES['Q_ANSWERED'], 1)
-
         except socket.timeout:
-            print("Timeout reached. No more clients will be accepted.")
             self.network_manager.send_message(client_socket, MESSAGES['NO_ANSWER'])
+            player_ans = None
         except Exception as e:
             print("An error occurred while receiving data from the client:", e)
+            player_ans = None
+        if player_ans is None:
+            str_player_ans = None
+        else:
+            print(player_ans)
+            str_player_ans = player_ans.decode('utf-8')
+            print(str_player_ans)
+        answer = get_bool_ans(str_player_ans)
+        print(answer)
+
+        if check_answer(answer, correct_ans):
+            player = (player_name, client_socket)
+            add_to_locked_list(player, self.have_winner_lock, self.have_winner)
+            self.history_manager.add_to_history(player_name, HISTORY['Q_ANSWERED'], 1)
+            self.history_manager.add_to_history(player_name, HISTORY['RIGHT_ANSWER'], 1)
+            self.network_manager.send_message(client_socket, HISTORY['RIGHT_ANSWER'])
+        elif answer is None:
+            self.network_manager.send_message(client_socket, MESSAGES['INVALID_ANSWER'])
+        else:
+            self.network_manager.send_message(client_socket, MESSAGES['WRONG_ANSWER'])
+            self.history_manager.add_to_history(player_name, MESSAGES['Q_ANSWERED'], 1)
 
 
     def start_game(self):
@@ -257,7 +263,8 @@ class GameServer:
         self.send_all(message)
 
     def show_statistics(self):
-        statistics_tup = self.statistics_creator.give_statistics(self.clients)
+        clients_names = [c[2] for c in self.clients]
+        statistics_tup = self.statistics_creator.give_statistics(clients_names)
         for stat in statistics_tup:
             self.send_all(stat)
 
