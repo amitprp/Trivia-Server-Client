@@ -1,5 +1,8 @@
 import socket
 import struct
+import threading
+
+from inputimeout import inputimeout, TimeoutOccurred
 import time
 from abc import abstractmethod
 from client_exceptions import *
@@ -19,32 +22,32 @@ class ClientState:
 class LookingForServerState(ClientState):
 
     def handle(self):
-        # Define the UDP port to listen on
-        UDP_PORT = 13117
+        # run on standard port range
+        for UDP_PORT in range(49152, 65535):
 
-        # Create a UDP socket
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            # Create a UDP socket
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-        # Set socket options to allow receiving broadcast messages
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+            # Set socket options to allow receiving broadcast messages
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
-        # Bind the socket to the UDP port
-        sock.bind(('0.0.0.0', UDP_PORT))
+            # Bind the socket to the UDP port
+            sock.bind(('0.0.0.0', UDP_PORT))
 
-        print("Listening for UDP broadcast messages...")
+            print("Listening for UDP broadcast messages...")
 
-        try:
-            data, addr = sock.recvfrom(1024)  # Buffer size is 1024 bytes
-            server_NAME, server_PORT = self.parse_offer_packet(data)
-            print(server_NAME, server_PORT)
-            return True, server_NAME, addr, server_PORT
-        except socket.error as e:
-            print(f"Socket error occurred: {e}")
-            return False, None, None, None
-        except Exception as e:
-            print(e)
-            return False, None, None, None
+            try:
+                data, addr = sock.recvfrom(1024)  # Buffer size is 1024 bytes
+                server_NAME, server_PORT = self.parse_offer_packet(data)
+                print(server_NAME, server_PORT)
+                return True, server_NAME, addr, server_PORT
+            except socket.error as e:
+                print(f"Socket error occurred: {e}")
+                return False, None, None, None
+            except Exception as e:
+                print(e)
+                return False, None, None, None
 
     def parse_offer_packet(self, offer):
         magic_cookie, message_type, server_name_bytes, server_port = struct.unpack('!IB32sH', offer)
@@ -92,13 +95,45 @@ class GameModeState(ClientState):
     def __init__(self, server_CONNECTION):
         super().__init__(self)
         self.socket = server_CONNECTION
+        self.input_interrupt = False
+        self.input = None
+        self.server_data = None
 
     def handle(self):
         # Code to handle game mode state
         try:
-            # Receive data from the server
-            data = self.socket.recv(1024)  # Receive up to 1024 bytes of data
-            print(data.decode())
+            self.receive_data_from_server()
+            while
+            self.input_interrupt = False
+            input_thread = threading.Thread(target=self.check_input)
+            data_thread = threading.Thread(target=self.receive_data_from_server)
+
+            input_thread.start()
+            data_thread.start()
+
+            input_thread.join()
+            data_thread.join()
+
         except OSError:
-            return False
+            print
+
+    def check_input(self):
+        print("Enter your answer: (Y,T,1 for yes/ N,F,0 for no)")
+        self.input = None
+        seconds = 10
+        while not self.input_interrupt and seconds != 0:
+            try:
+                self.input = inputimeout(timeout=1)
+                self.socket.sendall(self.input.encode('utf-8'))
+            except TimeoutOccurred:
+                seconds -= 1
+
+    def receive_data_from_server(self):
+        # Receive data from the server
+        data = self.socket.recv(1024)  # Receive up to 1024 bytes of data
+        self.input_interrupt = True
+        print(data.decode())
+
+
+
 
