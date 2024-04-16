@@ -137,5 +137,11 @@ class Network:
 
     @staticmethod
     def send_message(client_socket, message):
-        client_socket.sendall(message.encode('utf-8'))
-        print(message)
+        try:
+            if client_socket.fileno() != -1:
+                client_socket.sendall(message.encode('utf-8'))
+                print(message)
+        except socket.error as e:
+            print(f"Socket error: {e}")
+        except UnicodeEncodeError as e:
+            print(f"Unicode error: {e}")

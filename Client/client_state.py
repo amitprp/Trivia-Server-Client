@@ -1,11 +1,19 @@
 import socket
 import struct
-import time
+import threading
 from abc import abstractmethod
 from client_exceptions import *
+from Client import ReadJson
+from inputimeout import inputimeout, TimeoutOccurred
+
+json_handle = ReadJson.JsonHandle('ClientJsons')
+constants = json_handle.read_json('constants.json')
+# Define the UDP port to listen on
+UDP_PORT = constants['UDP_PORT']
 
 
 class ClientState:
+
     def __init__(self, client):
         self.client = client
         self.server_IP = None
@@ -19,8 +27,6 @@ class ClientState:
 class LookingForServerState(ClientState):
 
     def handle(self):
-        # Define the UDP port to listen on
-        UDP_PORT = 13117
 
         # Create a UDP socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -35,10 +41,10 @@ class LookingForServerState(ClientState):
         print("Listening for UDP broadcast messages...")
 
         try:
-            data, addr = sock.recvfrom(1024)  # Buffer size is 1024 bytes
+            data, address = sock.recvfrom(1024)  # Buffer size is 1024 bytes
             server_NAME, server_PORT = self.parse_offer_packet(data)
             print(server_NAME, server_PORT)
-            return True, server_NAME, addr, server_PORT
+            return True, server_NAME, address[0], server_PORT
         except socket.error as e:
             print(f"Socket error occurred: {e}")
             return False, None, None, None
@@ -46,7 +52,8 @@ class LookingForServerState(ClientState):
             print(e)
             return False, None, None, None
 
-    def parse_offer_packet(self, offer):
+    @staticmethod
+    def parse_offer_packet(offer):
         magic_cookie, message_type, server_name_bytes, server_port = struct.unpack('!IB32sH', offer)
         magic_hex = hex(magic_cookie)
         type_hex = hex(message_type)
@@ -85,20 +92,74 @@ class ConnectingToServerState(ClientState):
                 return False, None
             return True, client_socket
 
-    # Example usage:
 
 
 class GameModeState(ClientState):
+
     def __init__(self, server_CONNECTION):
         super().__init__(self)
         self.socket = server_CONNECTION
+        self.stop_listen_to_client = False
 
     def handle(self):
         # Code to handle game mode state
+        while True:
+            self.listen_to_server()
+            self.listen_to_client()
+        listen_server_thread = threading.Thread(target=self.listen_to_server())
+        listen_server_thread.start()
+        user_input_thread = threading.Thread(target=self.listen_to_client())
+        user_input_thread.start()
+
+
+
+    @staticmethod
+    def get_input(k):
+        """
+        Get input from the user with a timeout.
+        Displays the prompt to the user and waits for input for a maximum of 10 seconds.
+        If no input is received within the timeout period, returns None.
+
+        Returns:
+            str or None: The input provided by the user or None if no input is received within the timeout.
+        """
+        answer = None
+        try:
+            answer = inputimeout(prompt=k, timeout=10)
+        except TimeoutOccurred:
+            pass
+        return answer
+
+    def listen_to_client(self):
+
+        user_input = ''
+        try:
+            user_input = self.get_input("kobi 11")
+            print(user_input)
+        except EOFError:
+            # Handle unexpected EOF, possibly by informing the user or taking other actions
+            print("Unexpected EOF while reading input.")
+        # Now you can send and receive data using the client_socket
+        data = f"{user_input}\n".encode('utf-8')
+        try:
+            self.socket.send(data)
+        except OSError as e:
+            print(e)
+        except ConnectionRefusedError:
+            print("Connection refused: The server is not running or is unreachable")
+
+
+    def listen_to_server(self):
+
         try:
             # Receive data from the server
             data = self.socket.recv(1024)  # Receive up to 1024 bytes of data
             print(data.decode())
-        except OSError:
-            return False
 
+        except TimeoutError:
+            print("Connection timed out: The server did not respond within the specified timeout, trying again...")
+        except OSError:
+            self.stop_listen_to_client = True
+        except ConnectionRefusedError:
+            print("Connection refused: The server is not running or is unreachable")
+            self.stop_listen_to_client = True

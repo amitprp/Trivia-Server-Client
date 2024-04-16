@@ -101,9 +101,13 @@ class GameServer:
             except socket.timeout:
                 print("Timeout reached. No more clients will be accepted.")
                 break
+            except BlockingIOError:
+                print("No incoming connections pending")
+            except socket.error as e:
+                print("Socket error:", e)
 
-        if len(self.clients) == 0:
-            print('There is no players right now!')
+        if len(self.clients) <= 1:
+            print('There is no enough players right now!')
             exit(0)
 
 
@@ -217,15 +221,29 @@ class GameServer:
 
 
     def send_all(self, message):
-        for client_socket, _, _ in self.clients:
-            client_socket.sendall(message.encode('utf-8'))
-        print(message)
+        try:
+            for client_socket, _, _ in self.clients:
+                client_socket.sendall(message.encode('utf-8'))
+                print(message)
+        except ConnectionRefusedError:
+            print("Connection refused: The server is not running or is unreachable")
+        except TimeoutError:
+            print("Connection timed out: The server did not respond within the specified timeout")
+        except OSError as e:
+            print(f"OS Error: {e}")
+
 
     def disconnect_all(self):
         self.send_all(MESSAGES['END_OF_GAME'])
-        for client_socket, _, _ in self.clients:
-            client_socket.close()
-        print('Game over, sending out offer requests...')
+        try:
+            for client_socket, _, _ in self.clients:
+                client_socket.close()
+            print('Game over, sending out offer requests...')
+        except socket.error as e:
+            print(f"Socket error while closing: {e}")
+        except ResourceWarning as e:
+            print(f"Resource warning while closing: {e}")
+
 
 
     def send_welcome_message(self):
