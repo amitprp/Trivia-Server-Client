@@ -1,7 +1,11 @@
 import socket
 import struct
+import sys
 import threading
 from abc import abstractmethod
+
+import select
+
 from client_exceptions import *
 from Client import ReadJson
 from inputimeout import inputimeout, TimeoutOccurred
@@ -93,73 +97,42 @@ class ConnectingToServerState(ClientState):
             return True, client_socket
 
 
-
 class GameModeState(ClientState):
 
-    def __init__(self, server_CONNECTION):
+    def __init__(self, server_SOCKET):
         super().__init__(self)
-        self.socket = server_CONNECTION
+        self.socket = server_SOCKET
         self.stop_listen_to_client = False
+        self.game_over = threading.Event()
 
     def handle(self):
-        # Code to handle game mode state
         while True:
-            self.listen_to_server()
-            self.listen_to_client()
-        # listen_server_thread = threading.Thread(target=self.listen_to_server())
-        # listen_server_thread.start()
-        # user_input_thread = threading.Thread(target=self.listen_to_client())
-        # user_input_thread.start()
 
+            data = self.socket.recv(1024)
+            if data:
+                data_decoded = data.decode()
+                print(data_decoded)
+                # if data_decoded.startswith('Question'):
+                try:
+                    user_input = self.get_input_with_timeout(timeout=1).encode('utf-8')
+                    self.socket.send(user_input)
+                except InputTimeout:
+                    pass
 
+    def get_input_with_timeout(self, timeout):
+        print(end='', flush=True)
 
-    @staticmethod
-    def get_input(k):
-        """
-        Get input from the user with a timeout.
-        Displays the prompt to the user and waits for input for a maximum of 10 seconds.
-        If no input is received within the timeout period, returns None.
+        user_input = ['']  # A list to store user input
 
-        Returns:
-            str or None: The input provided by the user or None if no input is received within the timeout.
-        """
-        answer = None
-        try:
-            answer = inputimeout(prompt=k, timeout=10)
-        except TimeoutOccurred:
-            pass
-        return answer
+        def input_thread():
+            user_input[0] = input().encode('utf-8')  # Get user input
+            self.socket.send(user_input[0])
 
-    def listen_to_client(self):
+        input_thread = threading.Thread(target=input_thread)
+        input_thread.start()
 
-        user_input = ''
-        try:
-            user_input = self.get_input("kobi 11")
-            print(user_input)
-        except EOFError:
-            # Handle unexpected EOF, possibly by informing the user or taking other actions
-            print("Unexpected EOF while reading input.")
-        # Now you can send and receive data using the client_socket
-        data = f"{user_input}\n".encode('utf-8')
-        try:
-            self.socket.send(data)
-        except OSError as e:
-            print(e)
-        except ConnectionRefusedError:
-            print("Connection refused: The server is not running or is unreachable")
+        input_thread.join(timeout)  # Wait for the input thread to finish or timeout
+        if input_thread.is_alive():  # If the input thread is still alive after timeout
+            raise InputTimeout
 
-
-    def listen_to_server(self):
-
-        try:
-            # Receive data from the server
-            data = self.socket.recv(1024)  # Receive up to 1024 bytes of data
-            print(data.decode())
-
-        except TimeoutError:
-            print("Connection timed out: The server did not respond within the specified timeout, trying again...")
-        except OSError:
-            self.stop_listen_to_client = True
-        except ConnectionRefusedError:
-            print("Connection refused: The server is not running or is unreachable")
-            self.stop_listen_to_client = True
+        return user_input[0]  # Return the user input
