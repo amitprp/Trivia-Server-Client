@@ -1,5 +1,9 @@
 import socket
 import psutil
+from Server import ReadJson
+
+json_handle = ReadJson.JsonHandle()
+CONSTANTS = json_handle.read_json('Jsons/constants.json')
 
 
 def is_None(to_check, word):
@@ -17,7 +21,8 @@ class Network:
         self.tcp_port = self.find_available_port(True)
         is_None(self.tcp_port, 'port')
 
-        self.server_ip, self.subnet_mask = '192.168.1.220', '255.255.255.0'  # self.get_wireless_ip_address()
+        self.server_ip, self.subnet_mask = self.get_wireless_ip_address()
+        print(self.server_ip, self.subnet_mask)
         is_None(self.server_ip, 'network')
         is_None(self.subnet_mask, 'network')
 
@@ -111,18 +116,26 @@ class Network:
     def get_wireless_ip_address():
         interfaces = psutil.net_if_addrs()
         statuses = psutil.net_if_stats()
-
+        subnet_mask = None
+        ip_address = None
         for interface_name, interface_addresses in interfaces.items():
 
             for address in interface_addresses:
                 if address.family == socket.AF_INET and statuses[interface_name].isup:
+                    cleaned_name = interface_name.replace("\u200F\u200F", "")
+                    for interface in CONSTANTS["WIFI_INTERFACE_NAMES"]:
+                        if cleaned_name.startswith(interface):
+                            ip_address = address.address
+                            subnet_mask = address.netmask
+                            return ip_address, subnet_mask
+                    for interface in CONSTANTS["ETHERNET_INTERFACE_NAMES"]:
+                        if cleaned_name.startswith(interface):
+                            ip_address = address.address
+                            subnet_mask = address.netmask
 
-                    ip_address = address.address
-                    subnet_mask = address.netmask
-                    print(ip_address, subnet_mask)
-                    return ip_address, subnet_mask
-        print("Cannot get wireless IP address")
-        return None, None
+        if ip_address is None:
+            print("Cannot get wireless IP address")
+        return ip_address, subnet_mask
 
 
     @staticmethod
