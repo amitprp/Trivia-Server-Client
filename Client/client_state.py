@@ -40,7 +40,7 @@ class LookingForServerState(ClientState):
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
         # Bind the socket to the UDP port
-        sock.bind(('', 13117))
+        sock.bind(('', UDP_PORT))
 
         print("Listening for UDP broadcast messages...")
 

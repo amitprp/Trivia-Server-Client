@@ -41,6 +41,6 @@ class StatisticsCreator:
             if q_asked > 0:
                 right_pre = get_it_right / q_asked
             cur_players_message += ANSI.BOLD + ANSI.RED_TEXT + f'{name} -' + ANSI.RESET + f' \n\tQuestion asked: : {q_asked} \n\tQuestion answered: {q_answered} \n\tRight answers: {get_it_right} \n\t' \
-                                                                                        f'Wrong answers: {q_answered - get_it_right} \n\tRight answers percentage: {right_pre} \n\tdidn\'t answer: {q_asked - q_answered} \n'
+                                                                                          f'Wrong answers: {q_answered - get_it_right} \n\tRight answers percentage: {right_pre} \n\tdidn\'t answer: {q_asked - q_answered} \n'
 
         return cur_players_message
