@@ -14,27 +14,31 @@ class TriviaClient:
         # self.start_game(number_of_players)
 
     def run(self):
-        connected = False
-        while not connected:
-            connected, server_NAME, server_IP, server_PORT = self.state.handle()
-            if server_NAME and server_IP and server_PORT:
-                self.server_NAME = server_NAME
-                self.server_IP = server_IP
-                self.server_PORT = server_PORT
-                print(server_IP)
-            else:
-                print("Error occurred in connection.")
-            # connect through TCP
-            self.next_state()
-            connected, self.server_SOCKET = self.state.handle()
-            if not connected or self.server_SOCKET is None:
-                print("Server disconnected, listening for offer requests...")
-                self.to_listen_state()
-                continue
-            print("have server connection")
-            # pass to game mode
-            self.next_state()
-            self.state.handle()
+        try:
+            connected = False
+            while not connected:
+                connected, server_NAME, server_IP, server_PORT = self.state.handle()
+                if server_NAME and server_IP and server_PORT:
+                    self.server_NAME = server_NAME
+                    self.server_IP = server_IP
+                    self.server_PORT = server_PORT
+                    print(server_IP)
+                else:
+                    print("Error occurred in connection.")
+                # connect through TCP
+                self.next_state()
+                connected, self.server_SOCKET = self.state.handle()
+                if not connected or self.server_SOCKET is None:
+                    print("Server disconnected, listening for offer requests...")
+                    self.to_listen_state()
+                    continue
+                print("have server connection")
+                # pass to game mode
+                self.next_state()
+                self.state.handle()
+        except ConnectionResetError:
+            self.to_listen_state()
+
 
 
     def next_state(self):
@@ -58,5 +62,5 @@ class TriviaClient:
 
 
 if __name__ == "__main__":
-    client = TriviaClient("Amit", 2)
+    client = TriviaClient("Amit", 1)
     client.run()
