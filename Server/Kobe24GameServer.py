@@ -165,7 +165,7 @@ class GameServer:
             self.network_manager.send_message(client_socket, MESSAGES['INVALID_ANSWER'])
         else:
             self.network_manager.send_message(client_socket, MESSAGES['WRONG_ANSWER'])
-            self.history_manager.add_to_history(player_name, MESSAGES['Q_ANSWERED'], 1)
+            self.history_manager.add_to_history(player_name, HISTORY['Q_ANSWERED'], 1)
 
 
     def start_game(self):
