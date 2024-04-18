@@ -1,7 +1,7 @@
 import threading
 import socket
 import struct
-import ReadJson
+import jsonsHandler
 import Questions
 import Network
 import GameHistory
@@ -9,7 +9,7 @@ import ANSI
 import Statistics
 import time
 
-json_handle = ReadJson.JsonHandle()
+json_handle = jsonsHandler.JsonHandle()
 CONSTANTS = json_handle.read_json('Jsons/constants.json')
 MESSAGES = json_handle.read_json('Jsons/messages.json')
 HISTORY = json_handle.read_json('Jsons/history.json')
@@ -217,6 +217,7 @@ class GameServer:
         self.show_statistics()
 
         self.disconnect_all()
+        self.history_manager.upload_to_database()
         self.manage_game()
 
 

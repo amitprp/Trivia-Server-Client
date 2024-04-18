@@ -4,6 +4,7 @@
   "Q_ASKED": "question asked",
   "GAME_PLAYED": "games played",
   "WINS": "wins",
+  "TOP_FIVE": "top_five",
   "STATISTICS_DICT": {
     "question asked": 0,
     "right answers": 0,

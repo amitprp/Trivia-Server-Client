@@ -1,8 +1,8 @@
 import ANSI
-import ReadJson
+import jsonsHandler
 import random
 
-json_handle = ReadJson.JsonHandle()
+json_handle = jsonsHandler.JsonHandle()
 RESET = ANSI.RESET
 
 # List of trivia questions about NBA

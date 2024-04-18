@@ -1,8 +1,8 @@
 import socket
 import psutil
-from Server import ReadJson
+from Server import jsonsHandler
 
-json_handle = ReadJson.JsonHandle()
+json_handle = jsonsHandler.JsonHandle()
 CONSTANTS = json_handle.read_json('Jsons/constants.json')
 
 

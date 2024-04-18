@@ -1,8 +1,8 @@
-import ReadJson
+import jsonsHandler
 import threading
 import copy
 
-json_handle = ReadJson.JsonHandle()
+json_handle = jsonsHandler.JsonHandle()
 HISTORY = json_handle.read_json(r'Jsons/history.json')
 
 
@@ -11,9 +11,8 @@ class GameHistory:
 
     def __init__(self):
 
-        self.history = dict()  # dict of {player_name: info_dict} --> info_dict = {info_name (for ex: games played): num)
+        self.history, self.top_5 = self.read_from_database()  # dict of {player_name: info_dict} --> info_dict = {info_name (for ex: games played): num)
         self.history_lock = threading.Lock()
-        self.top_5 = []
 
 
     def add_to_history(self, player_name, param, num_to_add):
@@ -41,18 +40,23 @@ class GameHistory:
         size = len(self.top_5)
 
         if size == 0:
-            self.top_5.append((player_name, player_wins))
-
-        elif player_wins <= self.top_5[-1][1]:
-            return None
-
+            self.top_5.append([player_name, player_wins])
         else:
-            for i in range(size):
-                if self.top_5[i][1] < player_wins:
-                    self.top_5.insert(i, (player_name, player_wins))
-                    break
-            if size >= 5:
-                self.top_5.pop()
+            for player_list in self.top_5:
+                if player_name == player_list[0]:
+                    player_list[1] = player_wins
+                    return
+
+            if player_wins <= self.top_5[-1][1]:
+                return None
+
+            else:
+                for i in range(size):
+                    if self.top_5[i][1] < player_wins:
+                        self.top_5.insert(i, (player_name, player_wins))
+                        break
+                if size >= 5:
+                    self.top_5.pop()
 
     def get_top_5(self):
         return self.top_5
@@ -82,3 +86,19 @@ class GameHistory:
                 got_it_right = self.history[name][got_it_right_str]
                 players_his.append((name, q_asked, q_answered, got_it_right))
         return players_his
+
+    def upload_to_database(self):
+        if len(self.top_5) > 0:
+            self.history[HISTORY['TOP_FIVE']] = self.top_5
+        json_handle.dict_to_json_file(self.history)
+
+    @staticmethod
+    def read_from_database():
+
+        history = json_handle.read_json(r'Jsons/Past_Results.json')
+        if not history:
+            return dict(), []
+        else:
+            top_5 = history[HISTORY['TOP_FIVE']]
+            history.pop(HISTORY['TOP_FIVE'])
+            return history, top_5
