@@ -1,5 +1,4 @@
 import threading
-import random
 import socket
 import struct
 import ReadJson
@@ -108,7 +107,7 @@ class GameServer:
             except socket.error as e:
                 print("Socket error:", e)
 
-        if len(self.clients) <= 1:
+        if len(self.clients) < 1:
             print('There is no enough players right now!')
             exit(0)
 
@@ -143,12 +142,16 @@ class GameServer:
 
         try:
             player_ans = client_socket.recv(CONSTANTS['BUFFER_SIZE'])
+
         except socket.timeout:
             self.network_manager.send_message(client_socket, MESSAGES['NO_ANSWER'])
             player_ans = None
-        except Exception as e:
-            print("An error occurred while receiving data from the client:", e)
+
+        except (ConnectionResetError, ConnectionAbortedError):
+            print("Connection reset or aborted by the client.")
             player_ans = None
+            client_socket.close()
+            self.remove_client(client_socket, player_name)
         if player_ans is None:
             str_player_ans = None
         else:
@@ -171,14 +174,13 @@ class GameServer:
     def start_game(self):
 
         index = 0
-        all_questions = self.question_manager.get_questions()
-        random.shuffle(all_questions)
+        self.question_manager.shuffle_questions()
 
         while len(self.have_winner) == 0 and index < self.question_manager.get_len():
 
-            message = f'Question {index+1}, True or False: {all_questions[index]["question"]}'
+            message = f'Question {index+1}, True or False: {self.question_manager.get_question_at_index(index)}'
             self.send_all(message)
-            correct_ans = all_questions[index]["is_true"]
+            correct_ans = self.question_manager.get_answer_at_index(index)
             time.sleep(0.5)
             threads = []
 
@@ -221,7 +223,7 @@ class GameServer:
     def announce_winner(self):
         winner = self.have_winner[0][0]
         self.history_manager.add_to_history(winner, HISTORY['WINS'], 1)
-        message = f'GAME OVER!\nCongratulations to the winner: {ANSI.BOLD} {winner}! {ANSI.RESET}'
+        message = f'GAME OVER!\nCongratulations to the winner: {ANSI.BOLD} {winner}! {ANSI.RESET}\n\n'
         self.send_all(message)
 
 
@@ -231,9 +233,9 @@ class GameServer:
                 client_socket.sendall(message.encode('utf-8'))
                 print(message)
         except ConnectionRefusedError:
-            print("Connection refused: The server is not running or is unreachable")
+            print("Connection refused: The client is not running or is unreachable")
         except TimeoutError:
-            print("Connection timed out: The server did not respond within the specified timeout")
+            print("Connection timed out: The client did not respond within the specified timeout")
         except OSError as e:
             print(f"OS Error: {e}")
 
@@ -255,8 +257,7 @@ class GameServer:
         message = MESSAGES['WELCOME_MESSAGE']
         i = 1
         for _, _, player_name in self.clients:
-            message += f'\nPlayer {i}: {player_name}'
-        message += '\n==\n'
+            message += f'\nPlayer {i}: {player_name}\n==\n'
         self.send_all(message)
 
     def show_statistics(self):
@@ -265,7 +266,12 @@ class GameServer:
         for stat in statistics_tup:
             self.send_all(stat)
 
+    def remove_client(self, client_socket, player_name):
+        for socket1, address, name in self.clients:
+            if socket1 == client_socket and name == player_name:
+                self.clients.remove((socket1, address, name))
+
 
 
 if __name__ == "__main__":
-    s = GameServer("Kobe24")
+    s = GameServer("MambaMentality")

@@ -1,14 +1,10 @@
 import socket
 import struct
-import sys
 import threading
 from abc import abstractmethod
-
-import select
-
 from client_exceptions import *
 from Client import ReadJson
-from inputimeout import inputimeout, TimeoutOccurred
+
 
 json_handle = ReadJson.JsonHandle('ClientJsons')
 constants = json_handle.read_json('constants.json')
@@ -118,6 +114,11 @@ class GameModeState(ClientState):
                     self.socket.send(user_input)
                 except InputTimeout:
                     pass
+            else:
+                print("Server closed the connection.")
+                self.socket.close()
+                return
+
 
     def get_input_with_timeout(self, timeout):
         print(end='', flush=True)

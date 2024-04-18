@@ -1,5 +1,6 @@
 import ANSI
 import ReadJson
+import random
 
 json_handle = ReadJson.JsonHandle()
 RESET = ANSI.RESET
@@ -56,7 +57,7 @@ surfing_questions = [
 
 def format_surfing_questions():
     for q in surfing_questions:
-        q['question'] = ANSI.CYAN_BACKGROUND + '~~~ ' + q['question'] + ' ~~~' + RESET
+        q['question'] = ANSI.CYAN_BACKGROUND + '~~~ ' + q['question'] + RESET
 
 
 # all question formatted
@@ -74,3 +75,12 @@ class Questions:
 
     def get_len(self):
         return len(self.all_questions)
+
+    def get_answer_at_index(self, index):
+        return self.all_questions[index]["is_true"]
+
+    def get_question_at_index(self, index):
+        return self.all_questions[index]["question"]
+
+    def shuffle_questions(self):
+        random.shuffle(self.all_questions)

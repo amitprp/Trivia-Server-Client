@@ -11,6 +11,7 @@ class TriviaClient:
         self.server_IP = None
         self.server_PORT = None
         self.server_SOCKET = None
+        self.run()
         # self.start_game(number_of_players)
 
     def run(self):
@@ -36,6 +37,7 @@ class TriviaClient:
                 # pass to game mode
                 self.next_state()
                 self.state.handle()
+                exit(0)
         except ConnectionResetError:
             self.to_listen_state()
 
@@ -63,4 +65,3 @@ class TriviaClient:
 
 if __name__ == "__main__":
     client = TriviaClient("Amit", 1)
-    client.run()
