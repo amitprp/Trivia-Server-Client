@@ -117,9 +117,7 @@ class GameServer:
             except socket.error as e:
                 print("Socket error:", e)
 
-        if len(self.clients) < 1:
-            print('There is no enough players right now!')
-            exit(0)
+        return self.check_enough_players()
 
 
 
@@ -158,10 +156,11 @@ class GameServer:
             player_ans = None
 
         except (ConnectionResetError, ConnectionAbortedError):
-            print("Connection reset or aborted by the client.")
+            print("Connection reset or aborted by the player: " + player_name)
             player_ans = None
             client_socket.close()
             self.remove_client(client_socket, player_name)
+            self.check_enough_players()
         if player_ans is None:
             str_player_ans = None
         else:
@@ -210,6 +209,7 @@ class GameServer:
 
 
     def manage_game(self):
+
         self.initiate_game_ds()
         print(f"Server started, listening on IP address {self.network_manager.get_ip_address()}")
         offer_message = self.construct_offer_packet()
@@ -217,7 +217,8 @@ class GameServer:
         # Start broadcasting offer announcements in a separate thread
         offer_thread = threading.Thread(target=self.send_offer_broadcast, args=(offer_message, broadcast_ip))
         offer_thread.start()
-        self.accept_clients()
+        enough_players = self.accept_clients()
+
         self.send_welcome_message()
         self.start_game()
         if len(self.have_winner):
@@ -257,7 +258,8 @@ class GameServer:
         try:
             for client_socket, _, _ in self.clients:
                 client_socket.close()
-            print('Game over, sending out offer requests...')
+            if len(self.clients):
+                print('Game over, sending out offer requests...')
         except socket.error as e:
             print(f"Socket error while closing: {e}")
         except ResourceWarning as e:
@@ -281,8 +283,14 @@ class GameServer:
     def remove_client(self, client_socket, player_name):
         for socket1, address, name in self.clients:
             if socket1 == client_socket and name == player_name:
+                print(name + 'is disconnected')
                 self.clients.remove((socket1, address, name))
 
+    def check_enough_players(self):
+        if len(self.clients) <= 1:
+            print('There is no enough players right now!')
+            self.disconnect_all()
+            self.manage_game()
 
 
 if __name__ == "__main__":
