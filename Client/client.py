@@ -1,8 +1,9 @@
 import multiprocessing
-import time
 
 from Client.client_state import *
 
+
+# TODO: add comments to the code!!!
 
 class TriviaClient:
     def __init__(self, player_name, number_of_players):
@@ -45,8 +46,7 @@ class TriviaClient:
         except ConnectionResetError:
             print('Problem with the socket. trying again!')
         finally:
-            self.run()
-
+            self.run()  # TODO: the second time dont work properly. need to be fixed
 
 
     def next_state(self):
@@ -76,4 +76,6 @@ class TriviaClient:
 
 
 if __name__ == "__main__":
-    client = TriviaClient("Amit", 1)
+    client = TriviaClient("Amit", 1)  # TODO: get different name each time we run the server (תסתכל בעבודה נראלי רשום על זה משהו)
+    # TODO: check if everything work using cmd
+
