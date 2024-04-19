@@ -98,8 +98,7 @@ class GameModeState(ClientState):
     def __init__(self, server_SOCKET):
         super().__init__(self)
         self.socket = server_SOCKET
-        self.stop_listen_to_client = False
-        self.game_over = threading.Event()
+
 
     def handle(self):
         while True:
@@ -116,7 +115,6 @@ class GameModeState(ClientState):
                     pass
             else:
                 print("Server closed the connection.")
-                self.socket.close()
                 return
 
 
@@ -125,11 +123,14 @@ class GameModeState(ClientState):
 
         user_input = ['']  # A list to store user input
 
-        def input_thread():
-            user_input[0] = input().encode('utf-8')  # Get user input
-            self.socket.send(user_input[0])
+        def input_thread(my_socket):
+            try:
+                user_input[0] = input().encode('utf-8')  # Get user input
+                my_socket.send(user_input[0])
+            except OSError as e:
+                print(e)
 
-        input_thread = threading.Thread(target=input_thread)
+        input_thread = threading.Thread(target=input_thread, args=[self.socket])
         input_thread.start()
 
         input_thread.join(timeout)  # Wait for the input thread to finish or timeout

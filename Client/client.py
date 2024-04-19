@@ -1,4 +1,5 @@
 import multiprocessing
+import time
 
 from Client.client_state import *
 
@@ -15,6 +16,8 @@ class TriviaClient:
         # self.start_game(number_of_players)
 
     def run(self):
+
+        self.initialize_game()
         try:
             connected = False
             while not connected:
@@ -26,20 +29,23 @@ class TriviaClient:
                     print(server_IP)
                 else:
                     print("Error occurred in connection.")
+                    break
                 # connect through TCP
                 self.next_state()
                 connected, self.server_SOCKET = self.state.handle()
+                print(self.server_SOCKET)
                 if not connected or self.server_SOCKET is None:
                     print("Server disconnected, listening for offer requests...")
-                    self.to_listen_state()
-                    continue
+                    break
                 print("have server connection")
                 # pass to game mode
                 self.next_state()
                 self.state.handle()
-                exit(0)
+                break
         except ConnectionResetError:
-            self.to_listen_state()
+            print('Problem with the socket. trying again!')
+        finally:
+            self.run()
 
 
 
@@ -50,8 +56,14 @@ class TriviaClient:
         elif state_type is ConnectingToServerState:
             self.state = GameModeState(self.server_SOCKET)
 
-    def to_listen_state(self):
+    def initialize_game(self):
+        if self.server_SOCKET is not None:
+            self.server_SOCKET.close()
         self.state = LookingForServerState(self)
+        self.server_NAME = None
+        self.server_IP = None
+        self.server_PORT = None
+        self.server_SOCKET = None
 
     def start_game(self, number_of_players):
         processes = []

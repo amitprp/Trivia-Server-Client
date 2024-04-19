@@ -81,10 +81,20 @@ class GameServer:
 
         print(f"Connection from {client_add}")
         player_name = client_sock.recv(1024).decode('utf-8').strip()
+
+        # self.clients_lock.acquire()
+        # players_names = [name for _, _, name in self.clients]
+        # self.clients_lock.release()
+        #
+        # if player_name in players_names:
+        #     self.network_manager.send_message(client_sock, 'This name already exist in this game, try another name')
+        #     continue
+
         print(f"Received player name: {player_name}")
         player_tup = (client_sock, client_add, player_name)
         self.history_manager.add_to_history(player_name, HISTORY['GAME_PLAYED'], 1)
         add_to_locked_list(player_tup, self.clients_lock, self.clients)
+
 
     def accept_clients(self):
 
@@ -218,6 +228,7 @@ class GameServer:
 
         self.disconnect_all()
         self.history_manager.upload_to_database()
+        time.sleep(1)
         self.manage_game()
 
 
