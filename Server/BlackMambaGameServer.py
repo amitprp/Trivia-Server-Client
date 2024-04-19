@@ -117,7 +117,7 @@ class GameServer:
             except socket.error as e:
                 print("Socket error:", e)
 
-        return self.check_enough_players()
+        self.check_enough_players()
 
 
 
@@ -217,7 +217,7 @@ class GameServer:
         # Start broadcasting offer announcements in a separate thread
         offer_thread = threading.Thread(target=self.send_offer_broadcast, args=(offer_message, broadcast_ip))
         offer_thread.start()
-        enough_players = self.accept_clients()
+        self.accept_clients()
 
         self.send_welcome_message()
         self.start_game()
@@ -288,7 +288,7 @@ class GameServer:
 
     def check_enough_players(self):
         if len(self.clients) <= 1:
-            print('There is no enough players right now!')
+            print('There is no enough players right now!\n')
             self.disconnect_all()
             self.manage_game()
 
