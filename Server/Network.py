@@ -29,12 +29,13 @@ class Network:
         """
         Initializes a new instance of the Network class.
         """
+        self.server_ip, self.subnet_mask = self.get_wireless_ip_address()
         self.udp_port = self.find_available_port(False)
         is_None(self.udp_port, 'port')
         self.tcp_port = self.find_available_port(True)
         is_None(self.tcp_port, 'port')
 
-        self.server_ip, self.subnet_mask = self.get_wireless_ip_address()
+
         print(self.server_ip, self.subnet_mask)
         is_None(self.server_ip, 'network')
         is_None(self.subnet_mask, 'network')
@@ -70,7 +71,7 @@ class Network:
             tcp_server_socket.listen()
             return tcp_server_socket
         except socket.error as e:
-            print(f"Socket error: {e}")
+            print(f"TCP socket error: {e} tcp")
             # Handle the error gracefully, possibly by retrying, logging, or exiting the program
             return None
 
@@ -81,11 +82,14 @@ class Network:
         try:
             # Create UDP socket for broadcasting offer announcements
             server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
             server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+
             server_socket.bind((self.server_ip, self.udp_port))
+
             return server_socket
         except socket.error as e:
-            print(f"Socket error: {e}")
+            print(f"UDP socket error: {e}")
             # Handle the error gracefully, possibly by retrying, logging, or exiting the program
             return None
 
@@ -110,7 +114,7 @@ class Network:
                 # Create a UDP socket
                 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 # Try binding to the current port
-                sock.bind(('localhost', port))
+                sock.bind((self.server_ip, port))
                 # If successful, return the port
                 print(f'port {port} is free to use.')
                 return port
