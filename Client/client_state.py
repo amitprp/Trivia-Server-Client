@@ -1,13 +1,7 @@
 import socket
 import struct
-import sys
 import threading
-import time
-
-import keyboard
 from abc import abstractmethod
-
-import select
 
 from client_exceptions import *
 import ReadJson
@@ -36,9 +30,6 @@ class LookingForServerState(ClientState):
 
     This state is responsible for handling the process of listening for UDP broadcast messages
     from servers and parsing the offer packet to obtain the server name and port.
-
-    Attributes:
-        None
 
     Methods:
         handle: Handles the process of listening for UDP broadcast messages and parsing the offer packet.
@@ -151,8 +142,6 @@ class ConnectingToServerState(ClientState):
             data = f"{self.player_name}\n".encode('utf-8')
             try:
                 client_socket.send(data)
-                data = client_socket.recv(1024)
-                print(data.decode())
             except OSError:
                 return False, None
             return True, client_socket
@@ -177,7 +166,6 @@ class GameModeState(ClientState):
     def __init__(self, server_SOCKET):
         super().__init__(self)
         self.socket = server_SOCKET
-        self.ans = None
 
     def handle(self):
         """
@@ -187,68 +175,70 @@ class GameModeState(ClientState):
         If the server closes the connection, the method returns.
 
         """
-        while True:
-            data = self.socket.recv(1024)
-            if data:
-                data_decoded = data.decode()
-                print(data_decoded)
-                try:
-                    if data_decoded.startswith("Question"):
-                        self.get_input()
-                        if self.ans is not None:
-                            self.socket.sendall(self.ans.encode())
-                    # user_input = self.get_input_with_timeout(timeout=1)
-                except InputTimeout:
-                    pass
-                except OSError as e:
-                    pass
-            else:
-                print("Server disconnected, listening for offer requests....")
-                return
+        while self.is_socket_open():
+            try:
+                data = self.socket.recv(1024)
+                if data:
+                    data_decoded = data.decode()
+                    print(data_decoded)
+                    try:
+                        self.get_input_with_timeout(timeout=1)
+                    except InputTimeout:
+                        pass
+                else:
+                    print("Server disconnected, listening for offer requests....")
+                    return
+            except ConnectionAbortedError:
+                break
+                # print(e)
 
-    def get_input(self):
-        self.ans = None
+    def is_socket_open(self):
+        # Check if the socket object exists
+        if self.socket is None:
+            return False
+
+        # Check if the socket is closed
         try:
-            print(end='', flush=True)  # Use end='' to avoid moving to a new line
-            readable, _, _ = select.select([sys.stdin], [], [], 9)
-            if readable:
-                ans = sys.stdin.readline().rstrip()
-                self.ans = ans
-        except TimeoutError:
+            # Attempt to retrieve the socket's fileno
+            self.socket.fileno()
+            return True
+        except socket.error:
+            # If fileno() raises a socket.error, the socket is closed
+            return False
+
+    def get_input_with_timeout(self, timeout):
+        """
+        Gets user input with a timeout.
+
+        This method prompts the user for input and waits for a specified timeout period.
+        If the user does not provide input within the timeout, an InputTimeout exception is raised.
+
+        Args:
+            timeout (int): The timeout period in seconds.
+
+        Returns:
+            str: The user input.
+
+        Raises:
+            InputTimeout: If the user does not provide input within the timeout period.
+
+        """
+
+        print(end='', flush=True)
+
+
+
+        input_thread = threading.Thread(target=self.input_thread)
+        input_thread.start()
+
+        input_thread.join(timeout)  # Wait for the input thread to finish or timeout
+        if input_thread.is_alive():  # If the input thread is still alive after timeout
+            raise InputTimeout
+
+
+    def input_thread(self):
+        try:
+            user_input = input().encode('utf-8')  # Get user input
+            self.socket.send(user_input)
+        except OSError as e:
             pass
-    # def get_input_with_timeout(self, timeout):
-    #     """
-    #     Gets user input with a timeout.
-    #
-    #     This method prompts the user for input and waits for a specified timeout period.
-    #     If the user does not provide input within the timeout, an InputTimeout exception is raised.
-    #
-    #     Args:
-    #         timeout (int): The timeout period in seconds.
-    #
-    #     Returns:
-    #         str: The user input.
-    #
-    #     Raises:
-    #         InputTimeout: If the user does not provide input within the timeout period.
-    #
-    #     """
-    #
-    #     print(end='', flush=True)
-    #
-    #     user_input = ['']  # A list to store user input
-    #
-    #     def input_thread(my_socket):
-    #         try:
-    #             user_input[0] = input().encode('utf-8')  # Get user input
-    #             my_socket.send(user_input[0])
-    #         except OSError:
-    #             pass
-    #
-    #     input_thread = threading.Thread(target=input_thread, args=[self.socket])
-    #     input_thread.start()
-    #     input_thread.join(timeout)  # Wait for the input thread to finish or timeout
-    #     if input_thread.is_alive():  # If the input thread is still alive after timeout
-    #         raise InputTimeout
-    #
-    #     return user_input[0]  # Return the user input

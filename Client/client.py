@@ -1,7 +1,4 @@
-import multiprocessing
 import random
-import subprocess
-import sys
 import time
 
 from client_state import *
@@ -16,10 +13,6 @@ Names = constants['NAMES']
 class TClient:
     """
     Represents a client for a trivia game.
-
-    Args:
-        player_name (str): The name of the player.
-        number_of_players (int): The number of players in the game.
 
     Attributes:
         state: The current state of the client.
@@ -78,7 +71,7 @@ class TClient:
             print('Problem with the socket. trying again!')
         finally:
             self.server_SOCKET.close()
-            time.sleep(5)
+            time.sleep(1)
 
     @staticmethod
     def choose_name():
@@ -112,22 +105,6 @@ class TClient:
         self.server_PORT = None
         self.server_SOCKET = None
 
-    def start_game(self, number_of_players):
-        """
-        Starts the game with multiple players.
-
-        Args:
-            number_of_players (int): The number of players to start the game with.
-
-        This method creates multiple processes for each player and starts the game.
-        """
-        processes = []
-        for _ in range(number_of_players):
-            process = multiprocessing.Process(target=self.run)
-            process.start()
-            processes.append(process)
-        for process in processes:
-            process.join()
 
 
 class TriviaClient:
@@ -140,4 +117,5 @@ class TriviaClient:
 
 
 if __name__ == "__main__":
-    client = TriviaClient()
+    while True:
+        client = TriviaClient()
