@@ -313,7 +313,7 @@ class GameServer:
                 self.clients.remove((socket1, address, name))
 
     def check_enough_players(self):
-        if len(self.clients) < 1:
+        if len(self.clients) <= 1:
             print('There is no enough players right now!\n')
             self.disconnect_all()
             self.manage_game()
