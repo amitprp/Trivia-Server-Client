@@ -1,10 +1,7 @@
 import socket
 import struct
-import sys
 import threading
 from abc import abstractmethod
-
-import select
 
 from client_exceptions import *
 import ReadJson
@@ -33,9 +30,6 @@ class LookingForServerState(ClientState):
 
     This state is responsible for handling the process of listening for UDP broadcast messages
     from servers and parsing the offer packet to obtain the server name and port.
-
-    Attributes:
-        None
 
     Methods:
         handle: Handles the process of listening for UDP broadcast messages and parsing the offer packet.
@@ -181,21 +175,36 @@ class GameModeState(ClientState):
         If the server closes the connection, the method returns.
 
         """
-        while True:
-            data = self.socket.recv(1024)
-            if data:
-                data_decoded = data.decode()
-                print(data_decoded)
-                # if data_decoded.startswith('Question'):
-                try:
-                    user_input = self.get_input_with_timeout(timeout=1).encode('utf-8')
-                    self.socket.send(user_input)
-                except InputTimeout:
-                    pass
-            else:
-                print("Server disconnected, listening for offer requests....")
-                return
+        while self.is_socket_open():
+            try:
+                data = self.socket.recv(1024)
+                if data:
+                    data_decoded = data.decode()
+                    print(data_decoded)
+                    try:
+                        self.get_input_with_timeout(timeout=1)
+                    except InputTimeout:
+                        pass
+                else:
+                    print("Server disconnected, listening for offer requests....")
+                    return
+            except ConnectionAbortedError:
+                break
+                # print(e)
 
+    def is_socket_open(self):
+        # Check if the socket object exists
+        if self.socket is None:
+            return False
+
+        # Check if the socket is closed
+        try:
+            # Attempt to retrieve the socket's fileno
+            self.socket.fileno()
+            return True
+        except socket.error:
+            # If fileno() raises a socket.error, the socket is closed
+            return False
 
     def get_input_with_timeout(self, timeout):
         """
@@ -217,20 +226,19 @@ class GameModeState(ClientState):
 
         print(end='', flush=True)
 
-        user_input = ['']  # A list to store user input
 
-        def input_thread(my_socket):
-            try:
-                user_input[0] = input().encode('utf-8')  # Get user input
-                my_socket.send(user_input[0])
-            except OSError as e:
-                print(e)
 
-        input_thread = threading.Thread(target=input_thread, args=[self.socket])
+        input_thread = threading.Thread(target=self.input_thread)
         input_thread.start()
 
         input_thread.join(timeout)  # Wait for the input thread to finish or timeout
         if input_thread.is_alive():  # If the input thread is still alive after timeout
             raise InputTimeout
 
-        return user_input[0]  # Return the user input
+
+    def input_thread(self):
+        try:
+            user_input = input().encode('utf-8')  # Get user input
+            self.socket.send(user_input)
+        except OSError as e:
+            pass

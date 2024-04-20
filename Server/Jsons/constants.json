@@ -30,7 +30,7 @@
   "BUFFER_SIZE": 1024,
   "MAGIC_COOKIE": "0xabcddcba",
   "MESSAGE_TYPE": "0x2",
-  "TIME_OUT_IN_SEC": 10,
+  "TIME_OUT_IN_SEC": 5,
   "POSSIBLE_TRUE_ANSWERS": ["y", "t", "1"],
   "POSSIBLE_FALSE_ANSWERS": ["0", "n", "f"]
 }
