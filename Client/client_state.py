@@ -2,6 +2,9 @@ import socket
 import struct
 import sys
 import threading
+import time
+
+import keyboard
 from abc import abstractmethod
 
 import select
@@ -148,6 +151,8 @@ class ConnectingToServerState(ClientState):
             data = f"{self.player_name}\n".encode('utf-8')
             try:
                 client_socket.send(data)
+                data = client_socket.recv(1024)
+                print(data.decode())
             except OSError:
                 return False, None
             return True, client_socket
@@ -172,6 +177,7 @@ class GameModeState(ClientState):
     def __init__(self, server_SOCKET):
         super().__init__(self)
         self.socket = server_SOCKET
+        self.ans = None
 
     def handle(self):
         """
@@ -186,51 +192,63 @@ class GameModeState(ClientState):
             if data:
                 data_decoded = data.decode()
                 print(data_decoded)
-                # if data_decoded.startswith('Question'):
                 try:
-                    user_input = self.get_input_with_timeout(timeout=1).encode('utf-8')
-                    self.socket.send(user_input)
+                    if data_decoded.startswith("Question"):
+                        self.get_input()
+                        if self.ans is not None:
+                            self.socket.sendall(self.ans.encode())
+                    # user_input = self.get_input_with_timeout(timeout=1)
                 except InputTimeout:
+                    pass
+                except OSError as e:
                     pass
             else:
                 print("Server disconnected, listening for offer requests....")
                 return
 
-
-    def get_input_with_timeout(self, timeout):
-        """
-        Gets user input with a timeout.
-
-        This method prompts the user for input and waits for a specified timeout period.
-        If the user does not provide input within the timeout, an InputTimeout exception is raised.
-
-        Args:
-            timeout (int): The timeout period in seconds.
-
-        Returns:
-            str: The user input.
-
-        Raises:
-            InputTimeout: If the user does not provide input within the timeout period.
-
-        """
-
-        print(end='', flush=True)
-
-        user_input = ['']  # A list to store user input
-
-        def input_thread(my_socket):
-            try:
-                user_input[0] = input().encode('utf-8')  # Get user input
-                my_socket.send(user_input[0])
-            except OSError as e:
-                print(e)
-
-        input_thread = threading.Thread(target=input_thread, args=[self.socket])
-        input_thread.start()
-
-        input_thread.join(timeout)  # Wait for the input thread to finish or timeout
-        if input_thread.is_alive():  # If the input thread is still alive after timeout
-            raise InputTimeout
-
-        return user_input[0]  # Return the user input
+    def get_input(self):
+        self.ans = None
+        try:
+            print(end='', flush=True)  # Use end='' to avoid moving to a new line
+            readable, _, _ = select.select([sys.stdin], [], [], 9)
+            if readable:
+                ans = sys.stdin.readline().rstrip()
+                self.ans = ans
+        except TimeoutError:
+            pass
+    # def get_input_with_timeout(self, timeout):
+    #     """
+    #     Gets user input with a timeout.
+    #
+    #     This method prompts the user for input and waits for a specified timeout period.
+    #     If the user does not provide input within the timeout, an InputTimeout exception is raised.
+    #
+    #     Args:
+    #         timeout (int): The timeout period in seconds.
+    #
+    #     Returns:
+    #         str: The user input.
+    #
+    #     Raises:
+    #         InputTimeout: If the user does not provide input within the timeout period.
+    #
+    #     """
+    #
+    #     print(end='', flush=True)
+    #
+    #     user_input = ['']  # A list to store user input
+    #
+    #     def input_thread(my_socket):
+    #         try:
+    #             user_input[0] = input().encode('utf-8')  # Get user input
+    #             my_socket.send(user_input[0])
+    #         except OSError:
+    #             pass
+    #
+    #     input_thread = threading.Thread(target=input_thread, args=[self.socket])
+    #     input_thread.start()
+    #     input_thread.join(timeout)  # Wait for the input thread to finish or timeout
+    #     if input_thread.is_alive():  # If the input thread is still alive after timeout
+    #         raise InputTimeout
+    #
+    #     return user_input[0]  # Return the user input
