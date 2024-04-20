@@ -11,8 +11,8 @@ def is_None(to_check, word):
         print(f'there is no available {word} right now, try again later')
         exit(0)
 
-class Network:
 
+class Network:
     """
       Represents a network connection for the server.
 
@@ -30,21 +30,19 @@ class Network:
         Initializes a new instance of the Network class.
         """
         self.server_ip, self.subnet_mask = self.get_wireless_ip_address()
+        is_None(self.server_ip, 'network')
+        is_None(self.subnet_mask, 'network')
+        print(self.server_ip, self.subnet_mask)
+
         self.udp_port = self.find_available_port(False)
         is_None(self.udp_port, 'port')
         self.tcp_port = self.find_available_port(True)
         is_None(self.tcp_port, 'port')
 
-
-        print(self.server_ip, self.subnet_mask)
-        is_None(self.server_ip, 'network')
-        is_None(self.subnet_mask, 'network')
-
         self.udp_socket = self.create_udp_socket()
         is_None(self.udp_socket, 'socket')
         self.tcp_socket = self.create_tcp_socket()
         is_None(self.tcp_socket, 'socket')
-
 
     def get_udp_port(self):
         return self.udp_port
@@ -61,7 +59,6 @@ class Network:
     def get_ip_address(self):
         return self.server_ip
 
-
     def create_tcp_socket(self):
 
         try:
@@ -74,8 +71,6 @@ class Network:
             print(f"TCP socket error: {e} tcp")
             # Handle the error gracefully, possibly by retrying, logging, or exiting the program
             return None
-
-
 
     def create_udp_socket(self):
 
@@ -93,11 +88,9 @@ class Network:
             # Handle the error gracefully, possibly by retrying, logging, or exiting the program
             return None
 
-
     def calc_broadcast_ip(self):
         # Calculate the broadcast IP address
         return self.calculate_broadcast_ip(self.server_ip, self.subnet_mask)
-
 
     def find_available_port(self, tcp_or_udp):
 
@@ -128,7 +121,6 @@ class Network:
         # If no available port is found
         return None
 
-
     @staticmethod
     def get_wireless_ip_address():
         interfaces = psutil.net_if_addrs()
@@ -154,7 +146,6 @@ class Network:
             print("Cannot get wireless IP address")
         return ip_address, subnet_mask
 
-
     @staticmethod
     def calculate_broadcast_ip(ip_address, subnet_mask):
         # Calculate the broadcast IP address
@@ -165,7 +156,6 @@ class Network:
             return '.'.join(map(str, broadcast_parts))
         except ValueError:
             return None
-
 
     @staticmethod
     def send_message(client_socket, message):

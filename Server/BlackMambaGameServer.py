@@ -38,10 +38,6 @@ def check_answer(answer, correct_answer):
     return answer == correct_answer
 
 
-
-
-
-    # Rest of the code...
 class GameServer:
     """
        Represents a game server for the Trivia game.
@@ -94,7 +90,6 @@ class GameServer:
         self.statistics_creator = Statistics.StatisticsCreator(self.history_manager)
         self.manage_game()
 
-
     def initiate_game_ds(self):
         self.have_winner = []
         self.timer = 0
@@ -109,7 +104,6 @@ class GameServer:
             self.add_to_timer()
             time.sleep(1)
 
-
     def handle_client(self, client_sock, client_add):
 
         print(f"Connection from {client_add}")
@@ -119,7 +113,6 @@ class GameServer:
         player_tup = (client_sock, client_add, player_name)
         self.history_manager.add_to_history(player_name, HISTORY['GAME_PLAYED'], 1)
         add_to_locked_list(player_tup, self.clients_lock, self.clients)
-
 
     def accept_clients(self):
 
@@ -144,15 +137,12 @@ class GameServer:
 
         self.check_enough_players()
 
-
-
     def add_to_timer(self):
         self.timer_lock.acquire()
         try:
             self.timer += 1
         finally:
             self.timer_lock.release()
-
 
     def reset_timer(self):
         self.timer_lock.acquire()
@@ -161,13 +151,12 @@ class GameServer:
         finally:
             self.timer_lock.release()
 
-
     def construct_offer_packet(self):
 
         server_name_bytes = self.name.ljust(32).encode('utf-8')
-        offer_packet = struct.pack('!IB32sH', int(CONSTANTS['MAGIC_COOKIE'], 16), int(CONSTANTS['MESSAGE_TYPE'], 16), server_name_bytes, self.network_manager.get_tcp_port())
+        offer_packet = struct.pack('!IB32sH', int(CONSTANTS['MAGIC_COOKIE'], 16), int(CONSTANTS['MESSAGE_TYPE'], 16),
+                                   server_name_bytes, self.network_manager.get_tcp_port())
         return offer_packet
-
 
     def get_answer(self, client_socket, player_name, correct_ans):
 
@@ -204,7 +193,6 @@ class GameServer:
             self.network_manager.send_message(client_socket, MESSAGES['WRONG_ANSWER'])
             self.history_manager.add_to_history(player_name, HISTORY['Q_ANSWERED'], 1)
 
-
     def start_game(self):
 
         index = 0
@@ -212,7 +200,7 @@ class GameServer:
 
         while len(self.have_winner) == 0 and index < self.question_manager.get_len():
 
-            message = f'Question {index+1}, True or False: {self.question_manager.get_question_at_index(index)}'
+            message = f'Question {index + 1}, True or False: {self.question_manager.get_question_at_index(index)}'
             self.send_all(message)
             correct_ans = self.question_manager.get_answer_at_index(index)
             time.sleep(0.5)
@@ -221,7 +209,8 @@ class GameServer:
             for client_socket, client_address, player_name in self.clients:
                 try:
 
-                    ans_thread = threading.Thread(target=self.get_answer, args=(client_socket, player_name, correct_ans))
+                    ans_thread = threading.Thread(target=self.get_answer,
+                                                  args=(client_socket, player_name, correct_ans))
                     ans_thread.start()
                     self.history_manager.add_to_history(player_name, HISTORY['Q_ASKED'], 1)
                     threads.append(ans_thread)
@@ -232,7 +221,6 @@ class GameServer:
             for thread in threads:
                 thread.join()
             index += 1
-
 
     def manage_game(self):
 
@@ -258,13 +246,11 @@ class GameServer:
         time.sleep(1)
         self.manage_game()
 
-
     def announce_winner(self):
         winner = self.have_winner[0][0]
         self.history_manager.add_to_history(winner, HISTORY['WINS'], 1)
         message = f'GAME OVER!\nCongratulations to the winner: {ANSI.BOLD} {winner}! {ANSI.RESET}\n\n'
         self.send_all(message)
-
 
     def send_all(self, message):
         try:
@@ -278,7 +264,6 @@ class GameServer:
         except OSError as e:
             print(f"OS Error: {e}")
 
-
     def disconnect_all(self):
         self.send_all(MESSAGES['END_OF_GAME'])
         try:
@@ -290,8 +275,6 @@ class GameServer:
             print(f"Socket error while closing: {e}")
         except ResourceWarning as e:
             print(f"Resource warning while closing: {e}")
-
-
 
     def send_welcome_message(self):
         message = MESSAGES['WELCOME_MESSAGE']
