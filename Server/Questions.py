@@ -66,6 +66,19 @@ ALL_QUESTIONS = nba_questions + surfing_questions
 
 
 class Questions:
+    """
+    A class representing a collection of trivia questions.
+
+    Attributes:
+        all_questions (list): A list of all the trivia questions.
+
+    Methods:
+        get_questions(): Returns the list of all the trivia questions.
+        get_len(): Returns the number of trivia questions.
+        get_answer_at_index(index): Returns the answer at the specified index.
+        get_question_at_index(index): Returns the question at the specified index.
+        shuffle_questions(): Shuffles the order of the trivia questions.
+    """
 
     def __init__(self):
         self.all_questions = ALL_QUESTIONS

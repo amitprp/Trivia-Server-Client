@@ -38,27 +38,60 @@ def check_answer(answer, correct_answer):
     return answer == correct_answer
 
 
-class GameServer:
 
+
+
+    # Rest of the code...
+class GameServer:
+    """
+       Represents a game server for the Trivia game.
+
+       Attributes:
+       - name: The name of the game server.
+       - question_manager: An instance of the Questions class for managing questions.
+       - network_manager: An instance of the Network class for managing network connections.
+       - clients: A list of connected clients.
+       - clients_lock: A lock for thread-safe access to the clients list.
+       - timer: The current timer value.
+       - timer_lock: A lock for thread-safe access to the timer value.
+       - have_winner: A list of clients who have answered correctly.
+       - have_winner_lock: A lock for thread-safe access to the have_winner list.
+       - history_manager: An instance of the GameHistory class for managing game history.
+       - statistics_creator: An instance of the StatisticsCreator class for creating game statistics.
+
+       Methods:
+       - __init__(self, name): Initializes a new instance of the GameServer class.
+       - initiate_game_ds(self): Resets the game data structures.
+       - send_offer_broadcast(self, message, broadcast): Sends offer broadcast messages to clients.
+       - handle_client(self, client_sock, client_add): Handles a client connection.
+       - accept_clients(self): Accepts client connections for a specified duration.
+       - add_to_timer(self): Increments the timer value.
+       - reset_timer(self): Resets the timer value.
+       - construct_offer_packet(self): Constructs the offer packet for broadcasting.
+       - get_answer(self, client_socket, player_name, correct_ans): Gets the answer from a client.
+       - start_game(self): Starts the game and asks questions to clients.
+       - manage_game(self): Manages the game flow.
+       - announce_winner(self): Announces the winner of the game.
+       - send_all(self, message): Sends a message to all connected clients.
+       - disconnect_all(self): Disconnects all clients.
+       - send_welcome_message(self): Sends a welcome message to all connected clients.
+       - show_statistics(self): Shows game statistics to all connected clients.
+       - remove_client(self, client_socket, player_name): Removes a client from the clients list.
+       - check_enough_players(self): Checks if there are enough players to start the game.
+       """
 
     def __init__(self, name):
-
         self.name = name
         self.question_manager = Questions.Questions()
         self.network_manager = Network.Network()
-
         self.clients = []
         self.clients_lock = threading.Lock()
-
         self.timer = 0
         self.timer_lock = threading.Lock()
-
         self.have_winner = []
         self.have_winner_lock = threading.Lock()
-
         self.history_manager = GameHistory.GameHistory()
         self.statistics_creator = Statistics.StatisticsCreator(self.history_manager)
-
         self.manage_game()
 
 
@@ -81,14 +114,6 @@ class GameServer:
 
         print(f"Connection from {client_add}")
         player_name = client_sock.recv(1024).decode('utf-8').strip()
-
-        # self.clients_lock.acquire()
-        # players_names = [name for _, _, name in self.clients]
-        # self.clients_lock.release()
-        #
-        # if player_name in players_names:
-        #     self.network_manager.send_message(client_sock, 'This name already exist in this game, try another name')
-        #     continue
 
         print(f"Received player name: {player_name}")
         player_tup = (client_sock, client_add, player_name)
@@ -195,6 +220,7 @@ class GameServer:
 
             for client_socket, client_address, player_name in self.clients:
                 try:
+
                     ans_thread = threading.Thread(target=self.get_answer, args=(client_socket, player_name, correct_ans))
                     ans_thread.start()
                     self.history_manager.add_to_history(player_name, HISTORY['Q_ASKED'], 1)
@@ -287,7 +313,7 @@ class GameServer:
                 self.clients.remove((socket1, address, name))
 
     def check_enough_players(self):
-        if len(self.clients) <= 1:
+        if len(self.clients) < 1:
             print('There is no enough players right now!\n')
             self.disconnect_all()
             self.manage_game()

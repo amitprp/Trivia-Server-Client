@@ -1,6 +1,6 @@
 import socket
 import psutil
-from Server import jsonsHandler
+import jsonsHandler
 
 json_handle = jsonsHandler.JsonHandle()
 CONSTANTS = json_handle.read_json('Jsons/constants.json')
@@ -11,11 +11,24 @@ def is_None(to_check, word):
         print(f'there is no available {word} right now, try again later')
         exit(0)
 
-
 class Network:
 
-    def __init__(self):
+    """
+      Represents a network connection for the server.
 
+      Attributes:
+          udp_port (int): The UDP port number.
+          tcp_port (int): The TCP port number.
+          server_ip (str): The IP address of the server.
+          subnet_mask (str): The subnet mask of the server's network.
+          udp_socket (socket.socket): The UDP socket for broadcasting offer announcements.
+          tcp_socket (socket.socket): The TCP socket for accepting client connections.
+      """
+
+    def __init__(self):
+        """
+        Initializes a new instance of the Network class.
+        """
         self.udp_port = self.find_available_port(False)
         is_None(self.udp_port, 'port')
         self.tcp_port = self.find_available_port(True)

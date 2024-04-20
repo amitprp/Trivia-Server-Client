@@ -1,3 +1,35 @@
 {
-  "UDP_PORT" : 13117
+  "UDP_PORT" : 13117,
+  "NAMES" : [
+        "Kelly Slater",
+        "Stephanie Gilmore",
+        "John John Florence",
+        "Carissa Moore",
+        "Mick Fanning",
+        "Tyler Wright",
+        "Gabriel Medina",
+        "Sally Fitzgibbons",
+        "Taj Burrow",
+        "Rob Machado",
+        "Filipe Toledo",
+        "Julian Wilson",
+        "Jordy Smith",
+        "Layne Beachley",
+        "Lisa Andersen",
+        "LeBron James",
+        "Stephen Curry",
+        "Kevin Durant",
+        "Giannis Antetokounmpo",
+        "Kawhi Leonard",
+        "Luka Dončić",
+        "Nikola Jokić",
+        "Joel Embiid",
+        "James Harden",
+        "Anthony Davis",
+        "Damian Lillard",
+        "Jayson Tatum",
+        "Kyrie Irving",
+        "Russell Westbrook",
+        "Chris Paul"
+    ]
 }

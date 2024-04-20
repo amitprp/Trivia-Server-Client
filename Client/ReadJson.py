@@ -10,7 +10,7 @@ class JsonHandle:
     def read_json(self, name):
         path = self.dic + '/' + name
         try:
-            with open(path, 'r') as json_file:
+            with open(path, 'r', encoding='utf-8') as json_file:
                 return json.load(json_file)
         except FileNotFoundError:
             print("Error: File not found. Please check the file path.")
